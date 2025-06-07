@@ -1,6 +1,6 @@
-import * as faceapi from "face-api.js";
-import React, { useCallback, useEffect, useState } from "react";
-import { useAuth } from "../context/AuthContext";
+import * as faceapi from 'face-api.js';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 
 interface FaceRecognitionProps {
   videoRef: React.RefObject<HTMLVideoElement>;
@@ -23,15 +23,15 @@ const FaceRecognition: React.FC<FaceRecognitionProps> = ({
   // as face matching will be done on the backend
   useEffect(() => {
     const loadModels = async () => {
-      const MODEL_URL = "/models";
+      const MODEL_URL = '/models';
       try {
-        console.log("Loading Face API model...");
+        console.log('Loading Face API model...');
         await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
-        console.log("Face API model loaded");
+        console.log('Face API model loaded');
         setInitialized(true);
       } catch (error) {
-        console.error("Error initializing Face API:", error);
-        onError("Failed to initialize face detection.");
+        console.error('Error initializing Face API:', error);
+        onError('Failed to initialize face detection.');
       }
     };
 
@@ -44,20 +44,18 @@ const FaceRecognition: React.FC<FaceRecognitionProps> = ({
       const video = videoRef.current;
       const detection = await faceapi.detectSingleFace(video);
       if (!detection) {
-        console.log(
-          "No face detected. Please position yourself in the camera view."
-        );
+        console.log('No face detected. Please position yourself in the camera view.');
         setAttemptingAuth(false);
         return;
       }
 
       // Create a canvas from the video feed
-      const canvas = document.createElement("canvas");
+      const canvas = document.createElement('canvas');
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      const ctx = canvas.getContext("2d");
+      const ctx = canvas.getContext('2d');
       if (!ctx) {
-        throw new Error("Could not create canvas context");
+        throw new Error('Could not create canvas context');
       }
 
       // Draw the video frame to the canvas
@@ -66,11 +64,11 @@ const FaceRecognition: React.FC<FaceRecognitionProps> = ({
       // Convert canvas to blob
       const blob = await new Promise<Blob>((resolve, reject) => {
         canvas.toBlob(
-          (blob) => {
+          blob => {
             if (blob) resolve(blob);
-            else reject(new Error("Failed to create image blob"));
+            else reject(new Error('Failed to create image blob'));
           },
-          "image/jpeg",
+          'image/jpeg',
           0.95
         );
       });
@@ -79,24 +77,14 @@ const FaceRecognition: React.FC<FaceRecognitionProps> = ({
       // The login function will handle encryption of the image
       await login(email, blob);
       const stream = video.srcObject as MediaStream;
-      stream.getTracks().forEach((t) => t.stop());
+      stream.getTracks().forEach(t => t.stop());
       onAuthenticated();
     } catch (err: any) {
-      console.error("Auth error:", err);
-      onError(
-        err.response?.data?.message || err.message || "Authentication failed"
-      );
+      console.error('Auth error:', err);
+      onError(err.response?.data?.message || err.message || 'Authentication failed');
       setAttemptingAuth(false);
     }
-  }, [
-    initialized,
-    videoRef,
-    email,
-    login,
-    onAuthenticated,
-    onError,
-    attemptingAuth,
-  ]);
+  }, [initialized, videoRef, email, login, onAuthenticated, onError, attemptingAuth]);
 
   const handlePlay = useCallback(() => {
     if (!videoRef.current || !initialized || !email) return;
@@ -125,9 +113,9 @@ const FaceRecognition: React.FC<FaceRecognitionProps> = ({
       // Video not playing yet, wait for 'play' event
       const onVideoPlay = () => handlePlay();
 
-      video.addEventListener("play", onVideoPlay);
+      video.addEventListener('play', onVideoPlay);
       return () => {
-        video.removeEventListener("play", onVideoPlay);
+        video.removeEventListener('play', onVideoPlay);
       };
     }
   }, [initialized, videoRef, handlePlay]);

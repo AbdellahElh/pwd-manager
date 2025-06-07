@@ -1,4 +1,4 @@
-import { post, setAuthToken } from "../data/apiClient";
+import { post, setAuthToken } from '../data/apiClient';
 
 export interface User {
   id: number;
@@ -24,16 +24,13 @@ export const authService = {
    */
   async loginWithFace(email: string, selfie?: Blob): Promise<User> {
     const formData = new FormData();
-    formData.append("email", email);
+    formData.append('email', email);
 
     if (selfie) {
-      formData.append("selfie", selfie, "selfie.jpg");
+      formData.append('selfie', selfie, 'selfie.jpg');
     }
 
-    const response = await post<FormData, LoginResponse>(
-      "/users/login",
-      formData
-    );
+    const response = await post<FormData, LoginResponse>('/users/login', formData);
     // Save user to local storage
     const user = {
       ...response.user,
@@ -43,7 +40,7 @@ export const authService = {
     // Set the auth token for API requests
     setAuthToken(response.token);
 
-    localStorage.setItem("user", JSON.stringify(user));
+    localStorage.setItem('user', JSON.stringify(user));
     return user;
   },
 
@@ -51,14 +48,14 @@ export const authService = {
    * Check if user is logged in
    */
   isLoggedIn(): boolean {
-    const user = localStorage.getItem("user");
+    const user = localStorage.getItem('user');
     return !!user;
   },
   /**
    * Get current user from local storage
    */
   getCurrentUser(): User | null {
-    const userJson = localStorage.getItem("user");
+    const userJson = localStorage.getItem('user');
     if (userJson) {
       try {
         const user = JSON.parse(userJson);
@@ -77,7 +74,7 @@ export const authService = {
    * Logout user
    */
   logout(): void {
-    localStorage.removeItem("user");
+    localStorage.removeItem('user');
     setAuthToken(null);
   },
 };

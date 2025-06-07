@@ -1,6 +1,6 @@
 // src/components/Icons.tsx
-import React from "react";
-import { IconContext } from "react-icons";
+import React from 'react';
+import { IconContext } from 'react-icons';
 import {
   HiChevronLeft,
   HiDotsVertical,
@@ -13,16 +13,13 @@ import {
   HiTrash,
   HiUpload,
   HiUser,
-} from "react-icons/hi";
-import { MdOutlineContentCopy } from "react-icons/md";
+} from 'react-icons/hi';
+import { MdOutlineContentCopy } from 'react-icons/md';
 
 // Helper function to wrap icon components with IconContext
 const withIconContext = (IconComponent: React.ComponentType<any>) => {
-  return ({
-    className,
-    ...props
-  }: { className?: string } & Record<string, any>) => (
-    <IconContext.Provider value={{ className: `${className || "h-5 w-5"}` }}>
+  return ({ className, ...props }: { className?: string } & Record<string, any>) => (
+    <IconContext.Provider value={{ className: `${className || 'h-5 w-5'}` }}>
       <IconComponent {...props} />
     </IconContext.Provider>
   );

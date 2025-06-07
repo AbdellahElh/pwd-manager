@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 interface ProfileIconProps {
   email: string;
@@ -6,11 +6,7 @@ interface ProfileIconProps {
   className?: string;
 }
 
-const ProfileIcon: React.FC<ProfileIconProps> = ({
-  email,
-  onClick,
-  className = "",
-}) => {
+const ProfileIcon: React.FC<ProfileIconProps> = ({ email, onClick, className = '' }) => {
   // Get the first two characters from the email (usually initial letter of name or first two letters of email)
   const initials = email.substring(0, 2).toUpperCase();
 
@@ -18,7 +14,7 @@ const ProfileIcon: React.FC<ProfileIconProps> = ({
     <button
       onClick={onClick}
       className={`h-10 w-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 ${className}`}
-      title="Your Profile"
+      title='Your Profile'
     >
       {initials}
     </button>

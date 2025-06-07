@@ -1,4 +1,4 @@
-import axiosRoot from "axios";
+import axiosRoot from 'axios';
 
 // Use backend URL from environment
 const baseUrl = import.meta.env.VITE_BACKEND_URL;
@@ -10,9 +10,9 @@ export const axios = axiosRoot.create({
 // Function to set auth token for authentication
 export const setAuthToken = (token: string | null) => {
   if (token) {
-    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
   } else {
-    delete axios.defaults.headers.common["Authorization"];
+    delete axios.defaults.headers.common['Authorization'];
   }
 };
 
@@ -53,10 +53,7 @@ export const put = async <T extends { id: number | string }, R = T>(
 };
 
 // Generic function for DELETE requests
-export const remove = async (
-  url: string,
-  id: number | string
-): Promise<void> => {
+export const remove = async (url: string, id: number | string): Promise<void> => {
   await axios.delete(`${url}/${id}`);
 };
 
@@ -67,8 +64,8 @@ export const save = async <T extends { id?: number | string }, R = T>(
 ): Promise<R> => {
   const { id, ...values } = body;
   const response = await axios<R>({
-    method: id ? "PUT" : "POST",
-    url: `${url}/${id ?? ""}`,
+    method: id ? 'PUT' : 'POST',
+    url: `${url}/${id ?? ''}`,
     data: values,
   });
   return response.data;

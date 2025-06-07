@@ -1,15 +1,9 @@
 // src/context/AuthContext.tsx
-import React, {
-  createContext,
-  ReactNode,
-  useContext,
-  useMemo,
-  useState,
-} from "react";
-import { post, setAuthToken } from "../data/apiClient";
-import { LoginResponse, User } from "../models/User";
-import { getUserEncryptionKey } from "../utils/cryptoUtils";
-import { createEncryptedImageFormData } from "../utils/imageEncryptionUtils";
+import React, { createContext, ReactNode, useContext, useMemo, useState } from 'react';
+import { post, setAuthToken } from '../data/apiClient';
+import { LoginResponse, User } from '../models/User';
+import { getUserEncryptionKey } from '../utils/cryptoUtils';
+import { createEncryptedImageFormData } from '../utils/imageEncryptionUtils';
 
 interface AuthContextValue {
   user: User | null;
@@ -21,11 +15,9 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({
-  children,
-}) => {
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(() => {
-    const json = localStorage.getItem("user");
+    const json = localStorage.getItem('user');
     if (json) {
       try {
         const u: User = JSON.parse(json);
@@ -34,8 +26,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         }
         return u;
       } catch (error) {
-        console.error("Failed to parse user from localStorage:", error);
-        localStorage.removeItem("user");
+        console.error('Failed to parse user from localStorage:', error);
+        localStorage.removeItem('user');
         return null;
       }
     }
@@ -55,47 +47,35 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     if (selfie) {
       // Create a temporary encryption key for login
       // We use a combination of email and app secret to derive this key
-      const tempEncryptionKey = `pwd-manager-temp-${email}-${
-        import.meta.env.VITE_SECRET_KEY
-      }`;
+      const tempEncryptionKey = `pwd-manager-temp-${email}-${import.meta.env.VITE_SECRET_KEY}`;
 
       // Create encrypted form data with the selfie
-      formData = await createEncryptedImageFormData(
-        selfie,
-        tempEncryptionKey,
-        "selfie",
-        { email }
-      );
+      formData = await createEncryptedImageFormData(selfie, tempEncryptionKey, 'selfie', { email });
     } else {
       // If no selfie is provided, just send the email
       formData = new FormData();
-      formData.append("email", email);
+      formData.append('email', email);
     }
 
-    const response = await post<FormData, LoginResponse>(
-      "/users/login",
-      formData
-    );
+    const response = await post<FormData, LoginResponse>('/users/login', formData);
     const loggedInUser: User = {
       id: response.user.id,
       email: response.user.email,
       token: response.token,
     };
     setAuthToken(response.token);
-    localStorage.setItem("user", JSON.stringify(loggedInUser));
+    localStorage.setItem('user', JSON.stringify(loggedInUser));
     setUser(loggedInUser);
   };
 
   const logout = () => {
-    localStorage.removeItem("user");
+    localStorage.removeItem('user');
     setAuthToken(null);
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider
-      value={{ user, login, logout, isLoggedIn, encryptionKey }}
-    >
+    <AuthContext.Provider value={{ user, login, logout, isLoggedIn, encryptionKey }}>
       {children}
     </AuthContext.Provider>
   );
@@ -104,7 +84,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error("useAuth must be used within AuthProvider");
+    throw new Error('useAuth must be used within AuthProvider');
   }
   return context;
 }

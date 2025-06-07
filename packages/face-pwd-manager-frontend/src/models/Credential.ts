@@ -7,4 +7,4 @@ export interface CredentialEntry {
   userId: number;
 }
 
-export type NewCredentialEntry = Omit<CredentialEntry, "id">;
+export type NewCredentialEntry = Omit<CredentialEntry, 'id'>;

@@ -1,12 +1,11 @@
 // src/services/credentialService.ts
-import { fetchAll, fetchById, post, put, remove } from "../data/apiClient";
-import { CredentialEntry } from "../models/Credential";
-import { decrypt, encrypt } from "../utils/cryptoUtils";
+import { fetchAll, fetchById, post, put, remove } from '../data/apiClient';
+import { CredentialEntry } from '../models/Credential';
+import { decrypt, encrypt } from '../utils/cryptoUtils';
 
 // Interface for encrypted credential
 
-interface EncryptedCredential
-  extends Omit<CredentialEntry, "password" | "username"> {
+interface EncryptedCredential extends Omit<CredentialEntry, 'password' | 'username'> {
   password: string; // Encrypted password
   username: string; // Encrypted username
 }
@@ -47,13 +46,11 @@ export const fetchCredentials = async (
   encryptionKey: string | null
 ): Promise<CredentialEntry[]> => {
   if (!encryptionKey) {
-    throw new Error("Encryption key is required");
+    throw new Error('Encryption key is required');
   }
 
   const credentials = await fetchAll(`/credentials/user/${userId}`);
-  return credentials.map((cred: EncryptedCredential) =>
-    decryptCredential(cred, encryptionKey)
-  );
+  return credentials.map((cred: EncryptedCredential) => decryptCredential(cred, encryptionKey));
 };
 
 /**
@@ -64,7 +61,7 @@ export const fetchCredentialById = async (
   encryptionKey: string | null
 ): Promise<CredentialEntry> => {
   if (!encryptionKey) {
-    throw new Error("Encryption key is required");
+    throw new Error('Encryption key is required');
   }
 
   const credential = await fetchById(`/credentials/${id}`);
@@ -75,12 +72,12 @@ export const fetchCredentialById = async (
  * Create a new credential with encrypted password
  */
 export const createCredential = async (
-  credential: Omit<CredentialEntry, "id">,
+  credential: Omit<CredentialEntry, 'id'>,
   userId: number,
   encryptionKey: string | null
 ): Promise<CredentialEntry> => {
   if (!encryptionKey) {
-    throw new Error("Encryption key is required");
+    throw new Error('Encryption key is required');
   }
 
   const encryptedCredential = encryptCredential(
@@ -93,10 +90,10 @@ export const createCredential = async (
     userId,
   };
 
-  const createdCredential = await post<
-    typeof credentialWithUserId,
-    EncryptedCredential
-  >("/credentials", credentialWithUserId);
+  const createdCredential = await post<typeof credentialWithUserId, EncryptedCredential>(
+    '/credentials',
+    credentialWithUserId
+  );
 
   return decryptCredential(createdCredential, encryptionKey);
 };
@@ -109,13 +106,13 @@ export const updateCredential = async (
   encryptionKey: string | null
 ): Promise<CredentialEntry> => {
   if (!encryptionKey) {
-    throw new Error("Encryption key is required");
+    throw new Error('Encryption key is required');
   }
 
   const encryptedCredential = encryptCredential(credential, encryptionKey);
 
   const updatedCredential = await put<EncryptedCredential, EncryptedCredential>(
-    "/credentials",
+    '/credentials',
     encryptedCredential
   );
 
@@ -126,5 +123,5 @@ export const updateCredential = async (
  * Delete a credential by ID
  */
 export const deleteCredential = async (id: number): Promise<void> => {
-  await remove("/credentials", id);
+  await remove('/credentials', id);
 };

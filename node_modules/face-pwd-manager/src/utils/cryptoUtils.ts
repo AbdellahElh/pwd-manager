@@ -1,8 +1,8 @@
 // src/utils/cryptoUtils.ts
-import AES from "crypto-js/aes";
-import UTF8 from "crypto-js/enc-utf8";
-import PBKDF2 from "crypto-js/pbkdf2";
-import { showErrorToast } from "./toastUtils";
+import AES from 'crypto-js/aes';
+import UTF8 from 'crypto-js/enc-utf8';
+import PBKDF2 from 'crypto-js/pbkdf2';
+import { showErrorToast } from './toastUtils';
 
 // Get the salt from environment variables
 const SALT = import.meta.env.VITE_ENCRYPTION_SALT;
@@ -28,7 +28,7 @@ export const strengthenKey = (baseKey: string): string => {
  * @returns The encrypted value as a string
  */
 export const encrypt = (value: string, secretKey: string): string => {
-  if (!value) return "";
+  if (!value) return '';
   const strengthenedKey = strengthenKey(secretKey);
   return AES.encrypt(value, strengthenedKey).toString();
 };
@@ -40,14 +40,14 @@ export const encrypt = (value: string, secretKey: string): string => {
  * @returns The decrypted value as a string
  */
 export const decrypt = (encryptedValue: string, secretKey: string): string => {
-  if (!encryptedValue) return "";
+  if (!encryptedValue) return '';
   try {
     const strengthenedKey = strengthenKey(secretKey);
     const bytes = AES.decrypt(encryptedValue, strengthenedKey);
     return bytes.toString(UTF8);
   } catch (error) {
-    showErrorToast("Decryption failed. Please check your credentials.");
-    return "";
+    showErrorToast('Decryption failed. Please check your credentials.');
+    return '';
   }
 };
 
@@ -58,10 +58,7 @@ export const decrypt = (encryptedValue: string, secretKey: string): string => {
  * @param userEmail The user's email
  * @returns A unique key for the user
  */
-export const getUserEncryptionKey = (
-  userId: number,
-  userEmail: string
-): string => {
+export const getUserEncryptionKey = (userId: number, userEmail: string): string => {
   const appSecretKey = import.meta.env.VITE_SECRET_KEY;
   return `pwd-manager-${userId}-${userEmail}-${appSecretKey}`;
 };

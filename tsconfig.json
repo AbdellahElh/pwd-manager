@@ -1,0 +1,47 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "@backend/*": ["./packages/face-pwd-manager-backend/src/*"],
+      "@frontend/*": ["./packages/face-pwd-manager-frontend/src/*"],
+      "@shared/*": ["./packages/shared/*"]
+    }
+  },
+  "files": [],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "packages/*/node_modules",
+    "packages/*/dist",
+    "packages/*/build",
+    "packages/*/build/**/*"
+  ],
+  "references": [
+    {
+      "path": "./packages/face-pwd-manager-backend"
+    },
+    {
+      "path": "./packages/face-pwd-manager-frontend"
+    }
+  ]
+}

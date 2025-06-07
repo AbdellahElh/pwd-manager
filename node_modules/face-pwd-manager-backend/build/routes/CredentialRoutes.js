@@ -12,7 +12,7 @@ const router = (0, express_1.Router)();
  * GET /credentials
  * Retrieve all credentials.
  */
-router.get("/", (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+router.get('/', (0, asyncHandler_1.asyncHandler)(async (_req, res) => {
     const credentials = await (0, credential_service_1.getAllCredentials)();
     res.json(credentials);
 }));
@@ -20,7 +20,7 @@ router.get("/", (0, asyncHandler_1.asyncHandler)(async (req, res) => {
  * GET /credentials/:id
  * Retrieve a specific credential by its id.
  */
-router.get("/:id", (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+router.get('/:id', (0, asyncHandler_1.asyncHandler)(async (req, res) => {
     const id = +req.params.id;
     const credential = await (0, credential_service_1.getCredentialById)(id);
     res.json(credential);
@@ -29,7 +29,7 @@ router.get("/:id", (0, asyncHandler_1.asyncHandler)(async (req, res) => {
  * GET /credentials/user/:userId
  * Retrieve all credentials for a specific user.
  */
-router.get("/user/:userId", (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+router.get('/user/:userId', (0, asyncHandler_1.asyncHandler)(async (req, res) => {
     const userId = +req.params.userId;
     const credentials = await (0, credential_service_1.getCredentialsByUserId)(userId);
     res.json(credentials);
@@ -38,7 +38,7 @@ router.get("/user/:userId", (0, asyncHandler_1.asyncHandler)(async (req, res) =>
  * POST /credentials
  * Create a new credential.
  */
-router.post("/", (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+router.post('/', (0, asyncHandler_1.asyncHandler)(async (req, res) => {
     const validated = CredentialSchema_1.CredentialCreateSchema.parse(req.body);
     const newCredential = await (0, credential_service_1.createCredential)(validated);
     res.status(201).json(newCredential);
@@ -47,7 +47,7 @@ router.post("/", (0, asyncHandler_1.asyncHandler)(async (req, res) => {
  * PUT /credentials/:id
  * Update an existing credential.
  */
-router.put("/:id", (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+router.put('/:id', (0, asyncHandler_1.asyncHandler)(async (req, res) => {
     const id = +req.params.id;
     const validated = CredentialSchema_1.CredentialUpdateSchema.parse(req.body);
     const updated = await (0, credential_service_1.updateCredential)(id, validated);
@@ -57,9 +57,10 @@ router.put("/:id", (0, asyncHandler_1.asyncHandler)(async (req, res) => {
  * DELETE /credentials/:id
  * Delete a credential.
  */
-router.delete("/:id", (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+router.delete('/:id', (0, asyncHandler_1.asyncHandler)(async (req, res) => {
     const id = +req.params.id;
     const deletedCredential = await (0, credential_service_1.deleteCredential)(id);
     res.status(204).json(deletedCredential);
 }));
 exports.default = router;
+//# sourceMappingURL=CredentialRoutes.js.map

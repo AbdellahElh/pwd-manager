@@ -1,16 +1,16 @@
-import toast, { ToastOptions } from "react-hot-toast";
+import toast, { ToastOptions } from 'react-hot-toast';
 
 // Default toast style
 const defaultToastStyle: ToastOptions = {
-  position: "bottom-right",
+  position: 'bottom-right',
   style: {
-    background: "#333",
-    color: "#fff",
-    border: "1px solid #484848",
+    background: '#333',
+    color: '#fff',
+    border: '1px solid #484848',
   },
   iconTheme: {
-    primary: "#0ff",
-    secondary: "#000",
+    primary: '#0ff',
+    secondary: '#000',
   },
 };
 
@@ -19,10 +19,7 @@ const defaultToastStyle: ToastOptions = {
  * @param message The message to display in the toast
  * @param options Additional toast options to override defaults
  */
-export const showSuccessToast = (
-  message: string,
-  options?: Partial<ToastOptions>
-): string => {
+export const showSuccessToast = (message: string, options?: Partial<ToastOptions>): string => {
   return toast.success(message, { ...defaultToastStyle, ...options });
 };
 
@@ -31,10 +28,7 @@ export const showSuccessToast = (
  * @param message The message to display in the toast
  * @param options Additional toast options to override defaults
  */
-export const showErrorToast = (
-  message: string,
-  options?: Partial<ToastOptions>
-): string => {
+export const showErrorToast = (message: string, options?: Partial<ToastOptions>): string => {
   return toast.error(message, { ...defaultToastStyle, ...options });
 };
 
@@ -43,10 +37,7 @@ export const showErrorToast = (
  * @param message The message to display in the toast
  * @param options Additional toast options to override defaults
  */
-export const showInfoToast = (
-  message: string,
-  options?: Partial<ToastOptions>
-): string => {
+export const showInfoToast = (message: string, options?: Partial<ToastOptions>): string => {
   return toast(message, { ...defaultToastStyle, ...options });
 };
 

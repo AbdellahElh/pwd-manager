@@ -5,4 +5,4 @@ export interface UserEntry {
   faceDescriptor: number[];
 }
 
-export type NewUserEntry = Pick<UserEntry, "email">;
+export type NewUserEntry = Pick<UserEntry, 'email'>;

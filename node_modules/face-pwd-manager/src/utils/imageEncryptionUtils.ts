@@ -1,5 +1,5 @@
 // src/utils/imageEncryptionUtils.ts
-import { encrypt } from "./cryptoUtils";
+import { encrypt } from './cryptoUtils';
 
 /**
  * Converts a Blob to a base64 encoded string
@@ -10,16 +10,16 @@ export const blobToBase64 = (blob: Blob): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onloadend = () => {
-      if (typeof reader.result === "string") {
+      if (typeof reader.result === 'string') {
         // Remove the data URL prefix (e.g., "data:image/jpeg;base64,")
-        const base64 = reader.result.split(",")[1];
+        const base64 = reader.result.split(',')[1];
         resolve(base64);
       } else {
-        reject(new Error("Failed to convert blob to base64"));
+        reject(new Error('Failed to convert blob to base64'));
       }
     };
     reader.onerror = () => {
-      reject(new Error("Error reading file"));
+      reject(new Error('Error reading file'));
     };
     reader.readAsDataURL(blob);
   });
@@ -58,15 +58,12 @@ export const encryptImage = async (
 export const createEncryptedImageFormData = async (
   imageBlob: Blob,
   encryptionKey: string,
-  fieldName: string = "image",
+  _fieldName: string = 'image',
   additionalData: Record<string, string> = {}
 ): Promise<FormData> => {
   try {
     // Encrypt the image
-    const { encryptedData, contentType } = await encryptImage(
-      imageBlob,
-      encryptionKey
-    ); // Initialize form data
+    const { encryptedData, contentType } = await encryptImage(imageBlob, encryptionKey); // Initialize form data
     const formData = new FormData();
 
     // Convert the encrypted data to a Blob to send it as a file
@@ -76,22 +73,22 @@ export const createEncryptedImageFormData = async (
       data: encryptedData,
       contentType: contentType,
       encryptedAt: new Date().toISOString(),
-      version: "1.0", // Version tracking for future compatibility
+      version: '1.0', // Version tracking for future compatibility
     });
 
     // Convert to a file-like object that multer can properly process
     const encryptedBlob = new Blob([encryptedInfo], {
-      type: "application/json",
+      type: 'application/json',
     });
-    const encryptedFile = new File([encryptedBlob], "encrypted.json", {
-      type: "application/json",
+    const encryptedFile = new File([encryptedBlob], 'encrypted.json', {
+      type: 'application/json',
       lastModified: Date.now(),
     });
-    formData.append("encryptedImage", encryptedFile);
+    formData.append('encryptedImage', encryptedFile);
 
     // Also include content type info to help backend process the image
-    formData.append("encryptedContentType", contentType); // Include metadata for encryption
-    formData.append("encryptionVersion", "1.0");
+    formData.append('encryptedContentType', contentType); // Include metadata for encryption
+    formData.append('encryptionVersion', '1.0');
 
     // Add any additional data
     Object.entries(additionalData).forEach(([key, value]) => {
@@ -100,6 +97,6 @@ export const createEncryptedImageFormData = async (
 
     return formData;
   } catch (error) {
-    throw new Error("Failed to encrypt image data");
+    throw new Error('Failed to encrypt image data');
   }
 };

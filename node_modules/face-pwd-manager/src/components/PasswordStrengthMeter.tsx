@@ -1,5 +1,5 @@
 // src/components/PasswordStrengthMeter.tsx
-import React, { useMemo } from "react";
+import React, { useMemo } from 'react';
 
 interface PasswordStrengthMeterProps {
   password: string;
@@ -8,9 +8,7 @@ interface PasswordStrengthMeterProps {
 /**
  * PasswordStrengthMeter provides visual feedback on password strength
  */
-const PasswordStrengthMeter: React.FC<PasswordStrengthMeterProps> = ({
-  password,
-}) => {
+const PasswordStrengthMeter: React.FC<PasswordStrengthMeterProps> = ({ password }) => {
   /**
    * Calculate password strength score (0-100)
    * - Length: 0-40 points (8 chars = 20, 16+ chars = 40)
@@ -28,7 +26,7 @@ const PasswordStrengthMeter: React.FC<PasswordStrengthMeterProps> = ({
 
     // No score for empty passwords
     if (!password) {
-      return { score: 0, feedback: "Enter a password" };
+      return { score: 0, feedback: 'Enter a password' };
     }
 
     // Score for length (max 40 points)
@@ -59,29 +57,29 @@ const PasswordStrengthMeter: React.FC<PasswordStrengthMeterProps> = ({
     if (symbolCount >= 2) score += 10;
 
     // Provide feedback based on score
-    let feedback = "";
+    let feedback = '';
     if (score >= 90) {
-      feedback = "Excellent password!";
+      feedback = 'Excellent password!';
     } else if (score >= 70) {
-      feedback = "Strong password";
+      feedback = 'Strong password';
     } else if (score >= 50) {
-      feedback = "Good password";
+      feedback = 'Good password';
     } else if (score >= 30) {
-      feedback = "Moderate password";
+      feedback = 'Moderate password';
     } else {
-      feedback = "Weak password";
+      feedback = 'Weak password';
     }
 
     // Add specific suggestions for improvement
     const suggestions = [];
-    if (!hasLowercase) suggestions.push("Add lowercase letters");
-    if (!hasUppercase) suggestions.push("Add uppercase letters");
-    if (!hasNumbers) suggestions.push("Add numbers");
-    if (!hasSymbols) suggestions.push("Add symbols");
-    if (length < 12) suggestions.push("Make it longer");
+    if (!hasLowercase) suggestions.push('Add lowercase letters');
+    if (!hasUppercase) suggestions.push('Add uppercase letters');
+    if (!hasNumbers) suggestions.push('Add numbers');
+    if (!hasSymbols) suggestions.push('Add symbols');
+    if (length < 12) suggestions.push('Make it longer');
 
     if (suggestions.length > 0) {
-      feedback += ": " + suggestions.join(", ");
+      feedback += ': ' + suggestions.join(', ');
     }
 
     return { score, feedback };
@@ -89,22 +87,22 @@ const PasswordStrengthMeter: React.FC<PasswordStrengthMeterProps> = ({
 
   // Determine color based on score
   const getColorClass = () => {
-    if (score >= 80) return "bg-green-500";
-    if (score >= 60) return "bg-blue-500";
-    if (score >= 40) return "bg-yellow-500";
-    if (score >= 20) return "bg-orange-500";
-    return "bg-red-500";
+    if (score >= 80) return 'bg-green-500';
+    if (score >= 60) return 'bg-blue-500';
+    if (score >= 40) return 'bg-yellow-500';
+    if (score >= 20) return 'bg-orange-500';
+    return 'bg-red-500';
   };
 
   return (
-    <div className="mt-2">
-      <div className="h-2 w-full bg-gray-300 rounded-full overflow-hidden">
+    <div className='mt-2'>
+      <div className='h-2 w-full bg-gray-300 rounded-full overflow-hidden'>
         <div
           className={`h-full ${getColorClass()} transition-all duration-300`}
           style={{ width: `${score}%` }}
         ></div>
       </div>
-      <p className="text-sm mt-1 text-gray-400">{feedback}</p>
+      <p className='text-sm mt-1 text-gray-400'>{feedback}</p>
     </div>
   );
 };

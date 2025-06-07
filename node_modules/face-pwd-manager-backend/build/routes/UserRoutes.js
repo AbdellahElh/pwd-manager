@@ -12,18 +12,18 @@ const ServiceError_1 = require("../services/ServiceError");
 const user_service_1 = require("../services/user.service");
 const router = (0, express_1.Router)();
 const upload = (0, multer_1.default)({ storage: multer_1.default.memoryStorage() });
-router.get("/", (0, asyncHandler_1.asyncHandler)(async (_req, res) => {
+router.get('/', (0, asyncHandler_1.asyncHandler)(async (_req, res) => {
     res.json(await (0, user_service_1.getAllUsers)());
 }));
 // Get by id
-router.get("/:id", (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+router.get('/:id', (0, asyncHandler_1.asyncHandler)(async (req, res) => {
     res.json(await (0, user_service_1.getUserById)(+req.params.id));
 }));
 // Register → email + selfie (supporting both encrypted and unencrypted images)
-router.post("/register", upload.fields([
-    { name: "selfie", maxCount: 1 },
-    { name: "encryptedImage", maxCount: 1 },
-    { name: "originalImage", maxCount: 1 },
+router.post('/register', upload.fields([
+    { name: 'selfie', maxCount: 1 },
+    { name: 'encryptedImage', maxCount: 1 },
+    { name: 'originalImage', maxCount: 1 },
 ]), (0, asyncHandler_1.asyncHandler)(async (req, res) => {
     const { email } = UserSchema_1.UserEmailSchema.parse(req.body);
     const files = req.files;
@@ -35,7 +35,7 @@ router.post("/register", upload.fields([
         // Use the encrypted image file directly
         const virtualFile = {
             ...encryptedImageFile,
-            fieldname: "encryptedImage", // Make sure the fieldname is set correctly
+            fieldname: 'encryptedImage', // Make sure the fieldname is set correctly
         };
         const user = await (0, user_service_1.registerUserWithImage)({ email }, virtualFile);
         res.status(201).json(user);
@@ -47,14 +47,14 @@ router.post("/register", upload.fields([
     }
     else {
         // Neither encrypted image nor selfie file provided
-        throw ServiceError_1.ServiceError.validationFailed("No selfie provided for registration. Please capture a photo to create your account.");
+        throw ServiceError_1.ServiceError.validationFailed('No selfie provided for registration. Please capture a photo to create your account.');
     }
 }));
 // Login → email + selfie (supporting both encrypted and unencrypted images)
-router.post("/login", upload.fields([
-    { name: "selfie", maxCount: 1 },
-    { name: "encryptedImage", maxCount: 1 },
-    { name: "originalImage", maxCount: 1 },
+router.post('/login', upload.fields([
+    { name: 'selfie', maxCount: 1 },
+    { name: 'encryptedImage', maxCount: 1 },
+    { name: 'originalImage', maxCount: 1 },
 ]), (0, asyncHandler_1.asyncHandler)(async (req, res) => {
     const { email } = UserSchema_1.UserEmailSchema.parse(req.body);
     const files = req.files;
@@ -66,7 +66,7 @@ router.post("/login", upload.fields([
         // Pass the encrypted image file directly to the service
         const virtualFile = {
             ...encryptedImageFile,
-            fieldname: "encryptedImage", // Make sure the fieldname is set correctly
+            fieldname: 'encryptedImage', // Make sure the fieldname is set correctly
         };
         const result = await (0, user_service_1.authenticateWithFace)(email, virtualFile);
         res.json(result);
@@ -78,11 +78,12 @@ router.post("/login", upload.fields([
     }
     else {
         // Neither encrypted image nor selfie file provided
-        throw ServiceError_1.ServiceError.validationFailed("No selfie provided for authentication. Please capture a photo to login.");
+        throw ServiceError_1.ServiceError.validationFailed('No selfie provided for authentication. Please capture a photo to login.');
     }
 }));
 // Delete
-router.delete("/:id", (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+router.delete('/:id', (0, asyncHandler_1.asyncHandler)(async (req, res) => {
     res.json(await (0, user_service_1.deleteUser)(+req.params.id));
 }));
 exports.default = router;
+//# sourceMappingURL=UserRoutes.js.map

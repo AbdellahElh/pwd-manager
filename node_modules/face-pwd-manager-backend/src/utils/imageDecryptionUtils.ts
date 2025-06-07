@@ -1,5 +1,5 @@
 // src/utils/imageDecryptionUtils.ts
-import { decrypt, getUserEncryptionKey } from "./cryptoUtils";
+import { decrypt, getUserEncryptionKey } from './cryptoUtils';
 
 /**
  * Decrypts an encrypted selfie image
@@ -8,10 +8,7 @@ import { decrypt, getUserEncryptionKey } from "./cryptoUtils";
  * @param email The user's email address for key derivation
  * @returns Buffer containing the decrypted image data
  */
-export const decryptSelfieImage = (
-  encryptedData: Buffer,
-  email: string
-): Buffer => {
+export const decryptSelfieImage = (encryptedData: Buffer, email: string): Buffer => {
   try {
     // For initial registration, we use a temporary key based on email
     const tempEncryptionKey = `pwd-manager-temp-${email}-${process.env.APP_SECRET_KEY}`;
@@ -19,30 +16,30 @@ export const decryptSelfieImage = (
     // Parse the JSON that contains both encrypted data and content type
     let encryptedInfo;
     try {
-      const jsonStr = encryptedData.toString("utf8");
+      const jsonStr = encryptedData.toString('utf8');
       encryptedInfo = JSON.parse(jsonStr);
     } catch (jsonError) {
       // Fallback to treating the buffer as a direct encrypted string
-      encryptedInfo = { data: encryptedData.toString("utf8") };
+      encryptedInfo = { data: encryptedData.toString('utf8') };
     }
 
     const encryptedString = encryptedInfo.data; // Decrypt the data
     const decryptedBase64 = decrypt(encryptedString, tempEncryptionKey);
 
     if (!decryptedBase64) {
-      throw new Error("Decryption returned empty result");
+      throw new Error('Decryption returned empty result');
     }
 
     // Create proper image buffer from base64
     try {
       // Extract raw binary data from base64 string
-      const buffer = Buffer.from(decryptedBase64, "base64");
+      const buffer = Buffer.from(decryptedBase64, 'base64');
       return buffer;
     } catch (bufferError) {
-      throw new Error("Failed to create image buffer from decrypted data");
+      throw new Error('Failed to create image buffer from decrypted data');
     }
   } catch (error) {
-    throw new Error("Failed to decrypt selfie image");
+    throw new Error('Failed to decrypt selfie image');
   }
 };
 
@@ -66,24 +63,24 @@ export const decryptUserSelfieImage = (
     // Parse the JSON that contains both encrypted data and content type
     let encryptedInfo;
     try {
-      const jsonStr = encryptedData.toString("utf8");
+      const jsonStr = encryptedData.toString('utf8');
       encryptedInfo = JSON.parse(jsonStr);
     } catch (jsonError) {
       // Fallback to treating the buffer as a direct encrypted string
-      encryptedInfo = { data: encryptedData.toString("utf8") };
+      encryptedInfo = { data: encryptedData.toString('utf8') };
     }
 
     const encryptedString = encryptedInfo.data;
 
     // Try decryption with both keys
-    let decryptedBase64 = "";
+    let decryptedBase64 = '';
 
     try {
       // First try with the user-specific key
       decryptedBase64 = decrypt(encryptedString, encryptionKey);
 
       if (!decryptedBase64) {
-        throw new Error("Decryption returned empty result");
+        throw new Error('Decryption returned empty result');
       }
     } catch (decryptError) {
       // Try alternative approach with temporary key
@@ -93,22 +90,22 @@ export const decryptUserSelfieImage = (
         decryptedBase64 = decrypt(encryptedString, tempEncryptionKey);
 
         if (!decryptedBase64) {
-          throw new Error("Decryption with temp key returned empty result");
+          throw new Error('Decryption with temp key returned empty result');
         }
       } catch (tempKeyError) {
-        throw new Error("Could not decrypt with any available key");
+        throw new Error('Could not decrypt with any available key');
       }
     }
 
     // Create proper image buffer from base64
     try {
       // Extract raw binary data from base64 string
-      const buffer = Buffer.from(decryptedBase64, "base64");
+      const buffer = Buffer.from(decryptedBase64, 'base64');
       return buffer;
     } catch (bufferError) {
-      throw new Error("Failed to create image buffer from decrypted data");
+      throw new Error('Failed to create image buffer from decrypted data');
     }
   } catch (error) {
-    throw new Error("Failed to decrypt user selfie image");
+    throw new Error('Failed to decrypt user selfie image');
   }
 };

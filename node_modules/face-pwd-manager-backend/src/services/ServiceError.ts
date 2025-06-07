@@ -1,10 +1,10 @@
 // src/services/ServiceError.ts
 export enum ServiceErrorCode {
-  NOT_FOUND = "NOT_FOUND",
-  VALIDATION_FAILED = "VALIDATION_FAILED",
-  UNAUTHORIZED = "UNAUTHORIZED",
-  FORBIDDEN = "FORBIDDEN",
-  INTERNAL = "INTERNAL",
+  NOT_FOUND = 'NOT_FOUND',
+  VALIDATION_FAILED = 'VALIDATION_FAILED',
+  UNAUTHORIZED = 'UNAUTHORIZED',
+  FORBIDDEN = 'FORBIDDEN',
+  INTERNAL = 'INTERNAL',
 }
 
 export class ServiceError extends Error {
@@ -15,7 +15,7 @@ export class ServiceError extends Error {
     super(message);
     this.code = code;
     this.details = details;
-    this.name = "ServiceError";
+    this.name = 'ServiceError';
   }
 
   static notFound(message: string, details?: unknown) {
@@ -23,11 +23,7 @@ export class ServiceError extends Error {
   }
 
   static validationFailed(message: string, details?: unknown) {
-    return new ServiceError(
-      ServiceErrorCode.VALIDATION_FAILED,
-      message,
-      details
-    );
+    return new ServiceError(ServiceErrorCode.VALIDATION_FAILED, message, details);
   }
 
   static unauthorized(message: string, details?: unknown) {

@@ -18,28 +18,29 @@ const PORT = process.env.PORT || 3000;
 // Apply HTTPS enforcement middleware early in the pipeline
 app.use(httpsEnforcer_1.httpsEnforcer);
 // Set secure headers
-app.use((req, res, next) => {
+app.use((_req, res, next) => {
     // HTTP Strict Transport Security - force clients to use HTTPS
-    res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
     // Prevent clickjacking
-    res.setHeader("X-Frame-Options", "DENY");
+    res.setHeader('X-Frame-Options', 'DENY');
     // Enable XSS protection in browsers
-    res.setHeader("X-XSS-Protection", "1; mode=block");
+    res.setHeader('X-XSS-Protection', '1; mode=block');
     // Prevent MIME type sniffing
-    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader('X-Content-Type-Options', 'nosniff');
     next();
 });
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
-app.use(express_1.default.static("public"));
+app.use(express_1.default.static('public'));
 // Load face-api models before accepting requests for performance
-(0, user_service_1.loadModelsOnce)().catch((err) => {
-    console.error("Failed to load face-api models:", err);
+(0, user_service_1.loadModelsOnce)().catch(err => {
+    console.error('Failed to load face-api models:', err);
     process.exit(1);
 });
-app.use("/api/users", UserRoutes_1.default);
-app.use("/api/credentials", CredentialRoutes_1.default);
+app.use('/api/users', UserRoutes_1.default);
+app.use('/api/credentials', CredentialRoutes_1.default);
 app.use(errorHandler_1.errorHandler);
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
+//# sourceMappingURL=server.js.map
