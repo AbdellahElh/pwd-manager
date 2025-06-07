@@ -37,13 +37,13 @@ exports.getUserEncryptionKey = exports.decrypt = exports.encrypt = exports.stren
 // src/utils/CryptoUtils.ts
 const crypto = __importStar(require("crypto-js"));
 // Get the salt and secret key from environment variables
-const SALT = process.env.ENCRYPTION_SALT || "default";
+const SALT = process.env.ENCRYPTION_SALT || 'default';
 if (!process.env.ENCRYPTION_SALT) {
-    console.warn("Warning: ENCRYPTION_SALT environment variable is missing. Using default value.");
+    console.warn('Warning: ENCRYPTION_SALT environment variable is missing. Using default value.');
 }
-const APP_SECRET_KEY = process.env.APP_SECRET_KEY || "default";
+const APP_SECRET_KEY = process.env.APP_SECRET_KEY || 'default';
 if (!process.env.APP_SECRET_KEY) {
-    console.warn("Warning: APP_SECRET_KEY environment variable is missing. Using default value.");
+    console.warn('Warning: APP_SECRET_KEY environment variable is missing. Using default value.');
 }
 const ITERATIONS = 10000; // Must match frontend
 const KEY_SIZE = 256; // 256-bit key, must match frontend
@@ -69,7 +69,7 @@ exports.strengthenKey = strengthenKey;
  */
 const encrypt = (value, secretKey) => {
     if (!value)
-        return "";
+        return '';
     const strengthenedKey = (0, exports.strengthenKey)(secretKey);
     return crypto.AES.encrypt(value, strengthenedKey).toString();
 };
@@ -82,7 +82,7 @@ exports.encrypt = encrypt;
  */
 const decrypt = (encryptedValue, secretKey) => {
     if (!encryptedValue)
-        return "";
+        return '';
     try {
         const strengthenedKey = (0, exports.strengthenKey)(secretKey);
         // Improved error handling for malformed data
@@ -92,14 +92,14 @@ const decrypt = (encryptedValue, secretKey) => {
         // If decryption resulted in an empty string when input wasn't empty,
         // it's likely due to an invalid key
         if (!decrypted && encryptedValue) {
-            console.warn("Decryption produced empty result, possible key mismatch");
-            return ""; // Return empty string instead of throwing
+            console.warn('Decryption produced empty result, possible key mismatch');
+            return ''; // Return empty string instead of throwing
         }
         return decrypted;
     }
     catch (error) {
         // Return empty string instead of throwing to prevent crashes
-        return "";
+        return '';
     }
 };
 exports.decrypt = decrypt;
@@ -114,3 +114,4 @@ const getUserEncryptionKey = (userId, userEmail) => {
     return `pwd-manager-${userId}-${userEmail}-${APP_SECRET_KEY}`;
 };
 exports.getUserEncryptionKey = getUserEncryptionKey;
+//# sourceMappingURL=cryptoUtils.js.map

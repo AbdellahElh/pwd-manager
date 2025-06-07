@@ -1,5 +1,5 @@
 // src/db.ts
-import { PrismaClient } from "./generated/client";
+import { PrismaClient } from './generated/client';
 
 const prisma = new PrismaClient();
 

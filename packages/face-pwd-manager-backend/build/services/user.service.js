@@ -63,25 +63,18 @@ async function downscaleBuffer(buffer, maxDim = 600) {
     try {
         // Validate buffer before processing
         if (!buffer || buffer.length === 0) {
-            throw new Error("Empty buffer provided to downscaleBuffer");
+            throw new Error('Empty buffer provided to downscaleBuffer');
         } // Attempt to determine image format by examining buffer headers
-        let format = "unknown";
-        if (buffer[0] === 0xff && buffer[1] === 0xd8) {
-            format = "jpeg";
-        }
-        else if (buffer[0] === 0x89 &&
-            buffer[1] === 0x50 &&
-            buffer[2] === 0x4e &&
-            buffer[3] === 0x47) {
-            format = "png";
-        }
+        // Note: Image format detection for potential future use
+        // if (buffer[0] === 0xff && buffer[1] === 0xd8) -> jpeg
+        // if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47) -> png
         // Try to load the image
         const img = await (0, canvas_1.loadImage)(buffer);
         const ratio = Math.min(maxDim / img.width, maxDim / img.height, 1);
         const w = Math.round(img.width * ratio);
         const h = Math.round(img.height * ratio);
         const canvas = (0, canvas_1.createCanvas)(w, h);
-        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
         return canvas;
     }
     catch (error) {
@@ -92,12 +85,12 @@ let modelsLoaded = false;
 async function loadModelsOnce() {
     if (modelsLoaded)
         return;
-    const modelPath = path_1.default.join(__dirname, "../../public/models");
+    const modelPath = path_1.default.join(__dirname, '../../public/models');
     await faceapi.nets.tinyFaceDetector.loadFromDisk(modelPath);
     await faceapi.nets.faceLandmark68Net.loadFromDisk(modelPath);
     await faceapi.nets.faceRecognitionNet.loadFromDisk(modelPath);
     modelsLoaded = true;
-    console.log("✅ Face API models loaded");
+    console.log('✅ Face API models loaded');
 }
 async function userExists(id) {
     const user = await db_1.default.user.findUnique({ where: { id } });
@@ -108,17 +101,17 @@ async function userExists(id) {
 async function registerUserWithImage(data, file) {
     try {
         if (!file)
-            throw ServiceError_1.ServiceError.validationFailed("Selfie image is required");
+            throw ServiceError_1.ServiceError.validationFailed('Selfie image is required');
         // Check if we received an encrypted image
         let fileBuffer = file.buffer;
-        const encryptedImage = file.fieldname === "encryptedImage";
+        const encryptedImage = file.fieldname === 'encryptedImage';
         if (encryptedImage) {
             try {
                 // Decrypt the selfie image
                 fileBuffer = (0, imageDecryptionUtils_1.decryptSelfieImage)(fileBuffer, data.email);
             }
             catch (decryptError) {
-                throw ServiceError_1.ServiceError.validationFailed("Failed to decrypt image data");
+                throw ServiceError_1.ServiceError.validationFailed('Failed to decrypt image data');
             }
         }
         // Process the face image
@@ -129,7 +122,7 @@ async function registerUserWithImage(data, file) {
             .withFaceLandmarks()
             .withFaceDescriptor();
         if (!faceDetection) {
-            throw ServiceError_1.ServiceError.validationFailed("No face detected in the image. Please ensure your face is clearly visible and well-lit, then try again.");
+            throw ServiceError_1.ServiceError.validationFailed('No face detected in the image. Please ensure your face is clearly visible and well-lit, then try again.');
         }
         // Store only the face descriptor as native JSON array
         const faceDescriptorArray = Array.from(faceDetection.descriptor);
@@ -149,17 +142,17 @@ async function registerUserWithImage(data, file) {
 async function authenticateWithFace(email, file) {
     try {
         if (!file)
-            throw ServiceError_1.ServiceError.validationFailed("Selfie is required");
+            throw ServiceError_1.ServiceError.validationFailed('Selfie is required');
         // Find user & ensure descriptor exists
         const user = await db_1.default.user.findUnique({ where: { email } });
         if (!user)
             throw ServiceError_1.ServiceError.notFound(`User ${email} not found`);
         if (!user.faceDescriptor) {
-            throw ServiceError_1.ServiceError.validationFailed("No registered face found for this user. Please contact support to re-register your account.");
+            throw ServiceError_1.ServiceError.validationFailed('No registered face found for this user. Please contact support to re-register your account.');
         }
         // Check if we received an encrypted image
         let fileBuffer = file.buffer;
-        const encryptedImage = file.fieldname === "encryptedImage";
+        const encryptedImage = file.fieldname === 'encryptedImage';
         if (encryptedImage) {
             try {
                 // Try to decrypt using the user-specific key
@@ -171,7 +164,7 @@ async function authenticateWithFace(email, file) {
                 }
             }
             catch (decryptError) {
-                throw ServiceError_1.ServiceError.validationFailed("Failed to decrypt image data");
+                throw ServiceError_1.ServiceError.validationFailed('Failed to decrypt image data');
             }
         }
         // Downscale selfie & detect
@@ -182,7 +175,7 @@ async function authenticateWithFace(email, file) {
             .withFaceLandmarks()
             .withFaceDescriptor();
         if (!selfieDet)
-            throw ServiceError_1.ServiceError.validationFailed("No face detected in the image. Please ensure your face is clearly visible and well-lit, then try again.");
+            throw ServiceError_1.ServiceError.validationFailed('No face detected in the image. Please ensure your face is clearly visible and well-lit, then try again.');
         // Compare to stored descriptor (native JSON array)
         const stored = user.faceDescriptor;
         const storedDescriptor = new Float32Array(stored);
@@ -191,7 +184,7 @@ async function authenticateWithFace(email, file) {
             throw ServiceError_1.ServiceError.validationFailed("Face verification failed. The face in the image doesn't match your registered face. Please try again or contact support if this continues.");
         }
         if (!process.env.JWT_SECRET) {
-            throw ServiceError_1.ServiceError.validationFailed("JWT_SECRET environment variable is not defined");
+            throw ServiceError_1.ServiceError.validationFailed('JWT_SECRET environment variable is not defined');
         }
         const token = jsonwebtoken_1.default.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET);
         return {
@@ -229,3 +222,4 @@ async function deleteUser(id) {
         throw (0, handleDbError_1.handleDbError)(err);
     }
 }
+//# sourceMappingURL=user.service.js.map

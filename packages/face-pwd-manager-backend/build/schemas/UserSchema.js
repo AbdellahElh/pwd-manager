@@ -7,3 +7,4 @@ const zod_1 = require("zod");
 exports.UserEmailSchema = zod_1.z.object({
     email: zod_1.z.string().email(),
 });
+//# sourceMappingURL=UserSchema.js.map

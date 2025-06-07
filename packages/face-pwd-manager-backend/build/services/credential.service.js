@@ -52,13 +52,13 @@ async function getCredentialsByUserId(userId) {
 }
 async function createCredential(data) {
     try {
-        const { website, title, username, password, userId } = data;
+        const { website, title, username: _username, password: _password, userId } = data;
         const user = await db_1.default.user.findUnique({ where: { id: userId } });
         if (!user) {
             throw ServiceError_1.ServiceError.notFound(`User with id ${userId} does not exist`);
         }
         // Normalize website URL
-        if (!website.startsWith("http") || website.startsWith("www")) {
+        if (!website.startsWith('http') || website.startsWith('www')) {
             data.website = `https://${website}`;
         }
         // If title is empty, generate it from the website.
@@ -82,7 +82,7 @@ async function updateCredential(id, data) {
         }
         if (data.website) {
             updateData.website =
-                !data.website.startsWith("http") || data.website.startsWith("www")
+                !data.website.startsWith('http') || data.website.startsWith('www')
                     ? `https://${data.website}`
                     : data.website;
         }
@@ -96,7 +96,7 @@ async function updateCredential(id, data) {
             updateData.password = data.password;
         }
         if (!Object.keys(updateData).length) {
-            throw ServiceError_1.ServiceError.validationFailed("No update data provided");
+            throw ServiceError_1.ServiceError.validationFailed('No update data provided');
         }
         return await db_1.default.credential.update({
             where: { id },
@@ -122,17 +122,18 @@ function getTitleFromWebsite(website) {
     try {
         const url = new URL(website);
         let host = url.hostname;
-        if (host.startsWith("www.")) {
+        if (host.startsWith('www.')) {
             host = host.slice(4);
         }
         else {
             host = website;
         }
-        const domain = host.split(".")[0];
+        const domain = host.split('.')[0];
         return domain.charAt(0).toUpperCase() + domain.slice(1);
     }
     catch (error) {
-        console.error("Error parsing website URL:", error);
-        return "Unknown";
+        console.error('Error parsing website URL:', error);
+        return 'Unknown';
     }
 }
+//# sourceMappingURL=credential.service.js.map

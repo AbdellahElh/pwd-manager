@@ -1,8 +1,8 @@
 // src/middleware/errorHandler.ts
-import { ErrorRequestHandler, NextFunction, Request, Response } from "express";
+import { ErrorRequestHandler, NextFunction, Request, Response } from 'express';
 
-import { ZodError } from "zod";
-import { ServiceError, ServiceErrorCode } from "../services/ServiceError";
+import { ZodError } from 'zod';
+import { ServiceError, ServiceErrorCode } from '../services/ServiceError';
 
 export const errorHandler: ErrorRequestHandler = (
   err: Error,
@@ -37,7 +37,7 @@ export const errorHandler: ErrorRequestHandler = (
 
   if (err instanceof ZodError) {
     res.status(400).json({
-      error: "Validation error",
+      error: 'Validation error',
       issues: err.errors,
     });
     return;
@@ -45,7 +45,7 @@ export const errorHandler: ErrorRequestHandler = (
 
   console.error(err);
   res.status(500).json({
-    error: "Internal Server Error",
+    error: 'Internal Server Error',
     message: err.message,
   });
   return;

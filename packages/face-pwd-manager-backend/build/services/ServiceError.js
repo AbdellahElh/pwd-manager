@@ -15,7 +15,7 @@ class ServiceError extends Error {
         super(message);
         this.code = code;
         this.details = details;
-        this.name = "ServiceError";
+        this.name = 'ServiceError';
     }
     static notFound(message, details) {
         return new ServiceError(ServiceErrorCode.NOT_FOUND, message, details);
@@ -49,3 +49,4 @@ class ServiceError extends Error {
     }
 }
 exports.ServiceError = ServiceError;
+//# sourceMappingURL=ServiceError.js.map

@@ -30,16 +30,17 @@ const errorHandler = (err, _req, res, _next) => {
     }
     if (err instanceof zod_1.ZodError) {
         res.status(400).json({
-            error: "Validation error",
+            error: 'Validation error',
             issues: err.errors,
         });
         return;
     }
     console.error(err);
     res.status(500).json({
-        error: "Internal Server Error",
+        error: 'Internal Server Error',
         message: err.message,
     });
     return;
 };
 exports.errorHandler = errorHandler;
+//# sourceMappingURL=errorHandler.js.map

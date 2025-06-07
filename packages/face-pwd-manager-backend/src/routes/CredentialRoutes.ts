@@ -1,10 +1,7 @@
 // src/routes/credentials.ts
-import { Router } from "express";
-import { asyncHandler } from "../middleware/asyncHandler";
-import {
-  CredentialCreateSchema,
-  CredentialUpdateSchema,
-} from "../schemas/CredentialSchema";
+import { Router } from 'express';
+import { asyncHandler } from '../middleware/asyncHandler';
+import { CredentialCreateSchema, CredentialUpdateSchema } from '../schemas/CredentialSchema';
 import {
   createCredential,
   deleteCredential,
@@ -12,7 +9,7 @@ import {
   getCredentialById,
   getCredentialsByUserId,
   updateCredential,
-} from "../services/credential.service";
+} from '../services/credential.service';
 
 const router = Router();
 
@@ -24,8 +21,8 @@ const router = Router();
  * Retrieve all credentials.
  */
 router.get(
-  "/",
-  asyncHandler(async (req, res) => {
+  '/',
+  asyncHandler(async (_req, res) => {
     const credentials = await getAllCredentials();
     res.json(credentials);
   })
@@ -36,7 +33,7 @@ router.get(
  * Retrieve a specific credential by its id.
  */
 router.get(
-  "/:id",
+  '/:id',
   asyncHandler(async (req, res) => {
     const id = +req.params.id;
     const credential = await getCredentialById(id);
@@ -49,7 +46,7 @@ router.get(
  * Retrieve all credentials for a specific user.
  */
 router.get(
-  "/user/:userId",
+  '/user/:userId',
   asyncHandler(async (req, res) => {
     const userId = +req.params.userId;
     const credentials = await getCredentialsByUserId(userId);
@@ -62,7 +59,7 @@ router.get(
  * Create a new credential.
  */
 router.post(
-  "/",
+  '/',
   asyncHandler(async (req, res) => {
     const validated = CredentialCreateSchema.parse(req.body);
     const newCredential = await createCredential(validated);
@@ -75,7 +72,7 @@ router.post(
  * Update an existing credential.
  */
 router.put(
-  "/:id",
+  '/:id',
   asyncHandler(async (req, res) => {
     const id = +req.params.id;
     const validated = CredentialUpdateSchema.parse(req.body);
@@ -89,7 +86,7 @@ router.put(
  * Delete a credential.
  */
 router.delete(
-  "/:id",
+  '/:id',
   asyncHandler(async (req, res) => {
     const id = +req.params.id;
     const deletedCredential = await deleteCredential(id);
