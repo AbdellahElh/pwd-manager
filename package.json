@@ -1,0 +1,34 @@
+{
+  "name": "pwd-manager",
+  "description": "This project is a browser-based password management application enhanced with facial recognition technology. Users can authenticate themselves by positioning their face in front of the webcam, after which they can securely store, retrieve, and manage passwords. The application leverages face-api.js for face recognition and uses encryption for password storage.",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "main": "index.js",
+  "scripts": {
+    "start": "concurrently \"npm run start --prefix packages/face-pwd-manager-backend\" \"npm run start --prefix packages/face-pwd-manager-frontend\"",
+    "dev": "concurrently \"npm run watch --prefix packages/face-pwd-manager-backend\" \"npm run start --prefix packages/face-pwd-manager-frontend\"",
+    "build": "npm run build --prefix packages/face-pwd-manager-backend && npm run build --prefix packages/face-pwd-manager-frontend",
+    "install:all": "npm install && npm install --prefix packages/face-pwd-manager-backend && npm install --prefix packages/face-pwd-manager-frontend"
+  },
+  "dependencies": {
+    "@types/crypto-js": "^4.2.2",
+    "crypto-js": "^4.2.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.15.0",
+    "@types/multer": "^1.4.12",
+    "concurrently": "^8.0.0",
+    "eslint": "^9.15.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "eslint-plugin-react-refresh": "^0.4.14",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.15.0"
+  },
+  "keywords": ["password-manager", "facial-recognition", "security", "typescript", "react", "express"],
+  "author": "AbdellahElh",
+  "license": "ISC",
+  "type": "commonjs"
+}
