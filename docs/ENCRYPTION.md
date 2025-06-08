@@ -1,676 +1,266 @@
 # Encryption Implementation Guide
 
-This document provides detailed technical information about the encryption mechanisms implemented in the Password Manager with Facial Recognition application.
+Complete AES-256 encryption with PBKDF2 key derivation implementation for client-side data protection.
 
-## Encryption Overview
-
-The application implements a comprehensive encryption strategy based on:
-- **AES-256-CBC**: Advanced Encryption Standard with 256-bit keys
-- **PBKDF2**: Password-Based Key Derivation Function 2 for key strengthening
-- **Client-side encryption**: All sensitive data encrypted before transmission
-- **Unique user keys**: Each user has a cryptographically unique encryption key
-
-## Cryptographic Architecture
-
-### Encryption Flow
+## Encryption Architecture
 
 ```
-User Data → Key Generation → Key Strengthening → AES Encryption → Storage/Transmission
+User Data → Key Generation → PBKDF2 Strengthening → AES-256 Encryption → Storage
 ```
 
-### Key Management Hierarchy
+## Key Generation
 
-```
-App Secret Key (ENV) → User-Specific Base Key → PBKDF2 Strengthening → Final Encryption Key
-```
+### User-Specific Keys
 
-## Key Generation and Management
-
-### User-Specific Key Generation
-
-#### Frontend Implementation
 ```typescript
-// src/utils/cryptoUtils.ts (Frontend)
-export const getUserEncryptionKey = (userId: number, userEmail: string): string => {
-  const appSecretKey = import.meta.env.VITE_SECRET_KEY;
-  return `pwd-manager-${userId}-${userEmail}-${appSecretKey}`;
-};
-```
-
-#### Backend Implementation
-```typescript
-// src/utils/cryptoUtils.ts (Backend)
+// Generate unique encryption key per user
 export const getUserEncryptionKey = (userId: number, userEmail: string): string => {
   const appSecretKey = process.env.APP_SECRET_KEY;
   return `pwd-manager-${userId}-${userEmail}-${appSecretKey}`;
 };
 ```
 
-### Key Strengthening with PBKDF2
-
-#### Configuration Parameters
-```typescript
-const ENCRYPTION_SALT = process.env.ENCRYPTION_SALT || "default";
-const ITERATIONS = 10000; // PBKDF2 iterations
-const KEY_SIZE = 256; // 256-bit key size
-```
-
-#### Key Strengthening Implementation
-```typescript
-export const strengthenKey = (baseKey: string): string => {
-  return PBKDF2(baseKey, ENCRYPTION_SALT, {
-    keySize: KEY_SIZE / 32, // keySize in words (32 bits per word)
-    iterations: ITERATIONS,
-  }).toString();
-};
-```
-
-#### Security Benefits
-- **Salt-based derivation**: Prevents rainbow table attacks
-- **Iteration count**: Makes brute force attacks computationally expensive
-- **Key stretching**: Transforms weak keys into strong cryptographic keys
-- **Consistent output**: Same input always produces same strengthened key
-
-## AES Encryption Implementation
-
-### Frontend Encryption Module
+### PBKDF2 Key Derivation
 
 ```typescript
-// src/utils/cryptoUtils.ts (Frontend)
-import AES from 'crypto-js/aes';
-import UTF8 from 'crypto-js/enc-utf8';
-import PBKDF2 from 'crypto-js/pbkdf2';
+import CryptoJS from 'crypto-js';
 
-/**
- * Encrypts a string value using AES encryption with a strengthened key
- */
-export const encrypt = (value: string, secretKey: string): string => {
-  if (!value) return '';
-  
-  const strengthenedKey = strengthenKey(secretKey);
-  return AES.encrypt(value, strengthenedKey).toString();
-};
-
-/**
- * Decrypts an encrypted string value using AES encryption with a strengthened key
- */
-export const decrypt = (encryptedValue: string, secretKey: string): string => {
-  if (!encryptedValue) return '';
-  
-  try {
-    const strengthenedKey = strengthenKey(secretKey);
-    const bytes = AES.decrypt(encryptedValue, strengthenedKey);
-    return bytes.toString(UTF8);
-  } catch (error) {
-    console.error('Decryption failed:', error);
-    return '';
-  }
-};
-```
-
-### Backend Encryption Module
-
-```typescript
-// src/utils/cryptoUtils.ts (Backend)
-import * as crypto from "crypto-js";
-
-/**
- * Encrypts a string value using AES encryption with a strengthened key
- */
-export const encrypt = (value: string, secretKey: string): string => {
-  if (!value) return "";
-  
-  const strengthenedKey = strengthenKey(secretKey);
-  return crypto.AES.encrypt(value, strengthenedKey).toString();
-};
-
-/**
- * Decrypts an encrypted string value with enhanced error handling
- */
-export const decrypt = (encryptedValue: string, secretKey: string): string => {
-  if (!encryptedValue) return "";
-  
-  try {
-    const strengthenedKey = strengthenKey(secretKey);
-    const bytes = crypto.AES.decrypt(encryptedValue, strengthenedKey);
-    const decrypted = bytes.toString(crypto.enc.Utf8);
-    
-    // Validate decryption success
-    if (!decrypted && encryptedValue) {
-      console.warn("Decryption produced empty result, possible key mismatch");
-      return "";
-    }
-    
-    return decrypted;
-  } catch (error) {
-    console.error("Decryption error:", error);
-    return "";
-  }
-};
-```
-
-## Credential Encryption
-
-### Credential Data Structure
-
-```typescript
-// Plaintext credential (never stored)
-interface CredentialEntry {
-  id: number;
-  website: string;
-  title: string;
-  username: string; // Encrypted before storage
-  password: string; // Encrypted before storage
-  userId: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-// Encrypted credential (stored in database)
-interface EncryptedCredential {
-  id: number;
-  website: string; // Not encrypted (for searching/display)
-  title: string; // Not encrypted (for searching/display)
-  username: string; // Encrypted
-  password: string; // Encrypted
-  userId: number;
-  createdAt: string;
-  updatedAt: string;
-}
-```
-
-### Credential Encryption Process
-
-```typescript
-// src/services/credentialService.ts
-const encryptCredential = (
-  credential: CredentialEntry,
-  encryptionKey: string
-): EncryptedCredential => {
-  return {
-    ...credential,
-    username: encrypt(credential.username, encryptionKey),
-    password: encrypt(credential.password, encryptionKey),
-  };
-};
-
-const decryptCredential = (
-  credential: EncryptedCredential,
-  encryptionKey: string
-): CredentialEntry => {
-  return {
-    ...credential,
-    username: decrypt(credential.username, encryptionKey),
-    password: decrypt(credential.password, encryptionKey),
-  };
-};
-```
-
-### Credential Service Implementation
-
-```typescript
-// Create credential with encryption
-export const createCredential = async (
-  credential: Omit<CredentialEntry, 'id'>,
-  userId: number,
-  encryptionKey: string | null
-): Promise<CredentialEntry> => {
-  if (!encryptionKey) {
-    throw new Error('Encryption key is required');
-  }
-
-  // Encrypt sensitive fields
-  const encryptedCredential = encryptCredential(
-    { ...credential, id: 0 } as CredentialEntry,
-    encryptionKey
-  );
-
-  // Add user ID and send to server
-  const credentialWithUserId = {
-    ...encryptedCredential,
-    userId,
-  };
-
-  // Store encrypted credential
-  const createdCredential = await post<typeof credentialWithUserId, EncryptedCredential>(
-    '/credentials',
-    credentialWithUserId
-  );
-
-  // Return decrypted credential for UI
-  return decryptCredential(createdCredential, encryptionKey);
-};
-
-// Fetch and decrypt credentials
-export const fetchCredentials = async (
-  userId: number,
-  encryptionKey: string | null
-): Promise<CredentialEntry[]> => {
-  if (!encryptionKey) {
-    throw new Error('Encryption key is required');
-  }
-
-  // Fetch encrypted credentials from server
-  const credentials = await fetchAll(`/credentials/user/${userId}`);
-  
-  // Decrypt credentials for client use
-  return credentials.map((cred: EncryptedCredential) => 
-    decryptCredential(cred, encryptionKey)
-  );
-};
-```
-
-## Image Encryption
-
-### Image Encryption Architecture
-
-Face images require special handling due to their binary nature and security requirements.
-
-### Image to Base64 Conversion
-
-```typescript
-// src/utils/imageEncryptionUtils.ts
-export const blobToBase64 = (blob: Blob): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    
-    reader.onloadend = () => {
-      if (typeof reader.result === 'string') {
-        // Remove data URL prefix (e.g., "data:image/jpeg;base64,")
-        const base64 = reader.result.split(',')[1];
-        resolve(base64);
-      } else {
-        reject(new Error('Failed to convert blob to base64'));
-      }
-    };
-    
-    reader.onerror = () => {
-      reject(new Error('Error reading file'));
-    };
-    
-    reader.readAsDataURL(blob);
+export const deriveEncryptionKey = (
+  baseKey: string,
+  salt: string,
+  iterations: number = 10000
+): CryptoJS.lib.WordArray => {
+  return CryptoJS.PBKDF2(baseKey, salt, {
+    keySize: 256 / 32, // 256-bit key
+    iterations: iterations, // 10,000 iterations
+    hasher: CryptoJS.algo.SHA256,
   });
 };
 ```
 
-### Image Encryption Process
+## Password Encryption
+
+### Encryption Function
 
 ```typescript
-export const encryptImage = async (
-  imageBlob: Blob,
-  encryptionKey: string
-): Promise<{ encryptedData: string; contentType: string }> => {
-  // Convert image to base64
-  const base64Data = await blobToBase64(imageBlob);
-
-  // Encrypt the base64 data using AES
-  const encryptedData = encrypt(base64Data, encryptionKey);
-
-  return {
-    encryptedData,
-    contentType: imageBlob.type,
-  };
-};
-```
-
-### Encrypted Form Data Creation
-
-```typescript
-export const createEncryptedImageFormData = async (
-  imageBlob: Blob,
-  encryptionKey: string,
-  additionalData: Record<string, string> = {}
-): Promise<FormData> => {
+export const encryptPassword = (password: string, userId: number, userEmail: string): string => {
   try {
-    // Encrypt the image
-    const { encryptedData, contentType } = await encryptImage(imageBlob, encryptionKey);
+    // Generate user-specific base key
+    const baseKey = getUserEncryptionKey(userId, userEmail);
 
-    // Create metadata structure
-    const encryptedInfo = JSON.stringify({
-      data: encryptedData,
-      contentType: contentType,
-      encryptedAt: new Date().toISOString(),
-      version: '1.0', // Version tracking for compatibility
+    // Generate random salt for this encryption
+    const salt = CryptoJS.lib.WordArray.random(256 / 8);
+
+    // Derive strong encryption key using PBKDF2
+    const derivedKey = deriveEncryptionKey(baseKey, salt.toString());
+
+    // Encrypt the password using AES-256
+    const encrypted = CryptoJS.AES.encrypt(password, derivedKey, {
+      mode: CryptoJS.mode.CBC,
+      padding: CryptoJS.pad.Pkcs7,
+      iv: CryptoJS.lib.WordArray.random(128 / 8),
     });
 
-    // Create form data with encrypted content
-    const formData = new FormData();
-    const encryptedFile = new File([encryptedInfo], 'encrypted.json', {
-      type: 'application/json',
-      lastModified: Date.now(),
-    });
+    // Combine salt and encrypted data
+    const result = {
+      salt: salt.toString(),
+      encrypted: encrypted.toString(),
+    };
 
-    formData.append('encryptedImage', encryptedFile);
-    formData.append('encryptedContentType', contentType);
-    formData.append('encryptionVersion', '1.0');
-
-    // Add additional metadata
-    Object.entries(additionalData).forEach(([key, value]) => {
-      formData.append(key, value);
-    });
-
-    return formData;
+    return JSON.stringify(result);
   } catch (error) {
-    throw new Error('Failed to encrypt image data');
+    throw new Error('Password encryption failed');
   }
 };
 ```
 
-### Image Decryption (Backend)
+### Decryption Function
 
 ```typescript
-// src/utils/imageDecryptionUtils.ts
-export const decryptSelfieImage = (
-  encryptedData: Buffer,
-  email: string
-): Buffer => {
-  try {
-    // Use temporary key for registration
-    const tempEncryptionKey = `pwd-manager-temp-${email}-${process.env.APP_SECRET_KEY}`;
-
-    // Parse JSON metadata
-    let encryptedInfo;
-    try {
-      const jsonStr = encryptedData.toString("utf8");
-      encryptedInfo = JSON.parse(jsonStr);
-    } catch (jsonError) {
-      // Fallback for direct encrypted data
-      encryptedInfo = { data: encryptedData.toString("utf8") };
-    }
-
-    // Decrypt the base64 image data
-    const encryptedString = encryptedInfo.data;
-    const decryptedBase64 = decrypt(encryptedString, tempEncryptionKey);
-
-    if (!decryptedBase64) {
-      throw new Error("Decryption returned empty result");
-    }
-
-    // Convert back to binary buffer
-    const buffer = Buffer.from(decryptedBase64, "base64");
-    return buffer;
-  } catch (error) {
-    throw new Error("Failed to decrypt selfie image");
-  }
-};
-
-// User-specific image decryption
-export const decryptUserSelfieImage = (
-  encryptedData: Buffer,
+export const decryptPassword = (
+  encryptedData: string,
   userId: number,
-  email: string
-): Buffer => {
+  userEmail: string
+): string => {
   try {
-    // Generate user-specific encryption key
-    const encryptionKey = getUserEncryptionKey(userId, email);
+    // Parse encrypted data
+    const { salt, encrypted } = JSON.parse(encryptedData);
 
-    // Parse encrypted metadata
-    let encryptedInfo;
-    try {
-      const jsonStr = encryptedData.toString("utf8");
-      encryptedInfo = JSON.parse(jsonStr);
-    } catch (jsonError) {
-      encryptedInfo = { data: encryptedData.toString("utf8") };
-    }
+    // Regenerate the same base key
+    const baseKey = getUserEncryptionKey(userId, userEmail);
 
-    const encryptedString = encryptedInfo.data;
-    let decryptedBase64 = "";
+    // Derive the same encryption key using stored salt
+    const derivedKey = deriveEncryptionKey(baseKey, salt);
 
-    try {
-      // Try user-specific key first
-      decryptedBase64 = decrypt(encryptedString, encryptionKey);
-      
-      if (!decryptedBase64) {
-        throw new Error("Decryption returned empty result");
-      }
-    } catch (decryptError) {
-      // Fallback to temporary key
-      const tempEncryptionKey = `pwd-manager-temp-${email}-${process.env.APP_SECRET_KEY}`;
-      
-      try {
-        decryptedBase64 = decrypt(encryptedString, tempEncryptionKey);
-        
-        if (!decryptedBase64) {
-          throw new Error("Decryption with temp key returned empty result");
-        }
-      } catch (tempKeyError) {
-        throw new Error("Could not decrypt with any available key");
-      }
-    }
+    // Decrypt the password
+    const decryptedBytes = CryptoJS.AES.decrypt(encrypted, derivedKey, {
+      mode: CryptoJS.mode.CBC,
+      padding: CryptoJS.pad.Pkcs7,
+    });
 
-    // Convert to image buffer
-    const buffer = Buffer.from(decryptedBase64, "base64");
-    return buffer;
+    return decryptedBytes.toString(CryptoJS.enc.Utf8);
   } catch (error) {
-    throw new Error("Failed to decrypt user selfie image");
+    throw new Error('Password decryption failed');
   }
 };
 ```
 
-## Key Rotation and Management
+## Frontend Implementation
 
-### Temporary Keys for Registration
-
-During user registration, a temporary encryption key is used:
+### Encryption Service
 
 ```typescript
-// Frontend registration key
-const tempEncryptionKey = `pwd-manager-temp-${email}-${import.meta.env.VITE_SECRET_KEY}`;
+// EncryptionService.ts
+export class EncryptionService {
+  private static readonly ITERATIONS = 10000;
 
-// Backend registration key
-const tempEncryptionKey = `pwd-manager-temp-${email}-${process.env.APP_SECRET_KEY}`;
+  static async encryptData(data: string, userId: number, email: string): Promise<string> {
+    return encryptPassword(data, userId, email);
+  }
+
+  static async decryptData(encryptedData: string, userId: number, email: string): Promise<string> {
+    return decryptPassword(encryptedData, userId, email);
+  }
+
+  static generateSecureKey(): string {
+    return CryptoJS.lib.WordArray.random(256 / 8).toString();
+  }
+}
 ```
 
-### Key Transition Process
+### Password Form Integration
 
-1. **Registration**: Temporary key encrypts initial face image
-2. **Authentication**: User-specific key generated after successful login
-3. **Data Migration**: Future feature for key rotation
-4. **Fallback**: Backend can decrypt with both keys during transition
+```typescript
+// PasswordForm component encryption
+const handleSubmit = async (formData: PasswordFormData) => {
+  try {
+    const user = getCurrentUser();
 
-## Security Considerations
+    // Encrypt password before sending to server
+    const encryptedPassword = await EncryptionService.encryptData(
+      formData.password,
+      user.id,
+      user.email
+    );
 
-### Encryption Strength
+    // Send encrypted data to API
+    await createPassword({
+      ...formData,
+      password: encryptedPassword,
+    });
+  } catch (error) {
+    console.error('Password encryption failed:', error);
+  }
+};
+```
 
-#### AES-256-CBC Security Features
-- **256-bit key length**: Provides strong security against brute force
-- **CBC mode**: Cipher Block Chaining provides semantic security
-- **Random IV**: Each encryption uses a unique initialization vector
-- **PKCS#7 padding**: Ensures proper block alignment
+## Backend Considerations
 
-#### PBKDF2 Security Parameters
-- **10,000 iterations**: Computationally expensive for attackers
-- **256-bit output**: Full key strength maintained
-- **Unique salt**: Prevents rainbow table attacks
-- **SHA-256 underlying hash**: Cryptographically secure
+### Data Storage
+
+```typescript
+// Store encrypted passwords (server cannot decrypt)
+app.post('/api/passwords', authenticateToken, async (req, res) => {
+  const { title, username, password, url } = req.body;
+
+  // Password is already encrypted on client-side
+  // Server stores encrypted data without ability to decrypt
+  const newPassword = await prisma.password.create({
+    data: {
+      title,
+      username,
+      password, // Encrypted string from client
+      url,
+      userId: req.user.userId,
+    },
+  });
+
+  res.json(newPassword);
+});
+```
+
+### Data Retrieval
+
+```typescript
+// Retrieve encrypted passwords
+app.get('/api/passwords', authenticateToken, async (req, res) => {
+  const passwords = await prisma.password.findMany({
+    where: { userId: req.user.userId },
+    select: {
+      id: true,
+      title: true,
+      username: true,
+      password: true, // Still encrypted
+      url: true,
+      createdAt: true,
+    },
+  });
+
+  // Client will decrypt passwords after receiving them
+  res.json(passwords);
+});
+```
+
+## Security Features
 
 ### Key Security
 
-#### Best Practices Implemented
-- **Unique per-user keys**: Prevents cross-user data access
-- **Environment-based secrets**: Server secrets separate from client
-- **No key storage**: Keys derived on-demand, never persisted
-- **Key separation**: Different keys for different operations
+- **Unique Keys**: Each user has unique encryption keys
+- **Salt Usage**: Random salt for each encryption operation
+- **Key Derivation**: PBKDF2 with 10,000 iterations
+- **No Storage**: Encryption keys never stored on server
 
-#### Potential Vulnerabilities and Mitigations
-- **Environment variable exposure**: Use secure deployment practices
-- **Memory dumps**: Keys exist in memory temporarily only
-- **Side-channel attacks**: Use constant-time operations where possible
-- **Key derivation timing**: PBKDF2 provides consistent timing
+### Encryption Strength
+
+- **Algorithm**: AES-256-CBC (Advanced Encryption Standard)
+- **Key Size**: 256-bit encryption keys
+- **Block Size**: 128-bit initialization vectors
+- **Padding**: PKCS#7 padding standard
+
+### Implementation Security
+
+- **Client-Side Only**: All encryption/decryption on client
+- **Zero Knowledge**: Server cannot access plain text passwords
+- **Error Handling**: Secure error messages without data leakage
+- **Memory Management**: Sensitive data cleared after use
+
+## Testing
+
+### Unit Tests
+
+```typescript
+// Encryption service tests
+describe('EncryptionService', () => {
+  test('should encrypt and decrypt password correctly', () => {
+    const originalPassword = 'mySecurePassword123!';
+    const userId = 1;
+    const email = 'user@example.com';
+
+    const encrypted = encryptPassword(originalPassword, userId, email);
+    const decrypted = decryptPassword(encrypted, userId, email);
+
+    expect(decrypted).toBe(originalPassword);
+    expect(encrypted).not.toBe(originalPassword);
+  });
+
+  test('should generate different encrypted values for same input', () => {
+    const password = 'samePassword';
+    const userId = 1;
+    const email = 'user@example.com';
+
+    const encrypted1 = encryptPassword(password, userId, email);
+    const encrypted2 = encryptPassword(password, userId, email);
+
+    expect(encrypted1).not.toBe(encrypted2); // Different due to random salt
+  });
+});
+```
 
 ## Performance Considerations
 
-### Encryption Performance
+- **PBKDF2 Iterations**: Balance security vs performance (10,000 iterations)
+- **Client-Side Processing**: Encryption load on client device
+- **Memory Usage**: Clear sensitive data after operations
+- **Batch Operations**: Encrypt multiple passwords efficiently
 
-#### Optimization Strategies
-```typescript
-// Encrypt only sensitive fields
-const sensitiveFields = ['username', 'password'];
-const encryptedData = {};
-
-sensitiveFields.forEach(field => {
-  if (data[field]) {
-    encryptedData[field] = encrypt(data[field], key);
-  }
-});
-```
-
-#### Caching Strategies
-```typescript
-// Cache strengthened keys to avoid repeated PBKDF2
-const keyCache = new Map<string, string>();
-
-export const getOrCreateStrengthenedKey = (baseKey: string): string => {
-  if (keyCache.has(baseKey)) {
-    return keyCache.get(baseKey)!;
-  }
-  
-  const strengthenedKey = strengthenKey(baseKey);
-  keyCache.set(baseKey, strengthenedKey);
-  return strengthenedKey;
-};
-```
-
-### Memory Management
-
-#### Secure Memory Handling
-```typescript
-// Clear sensitive data from memory
-const clearSensitiveData = (obj: any) => {
-  if (typeof obj === 'object' && obj !== null) {
-    Object.keys(obj).forEach(key => {
-      if (typeof obj[key] === 'string') {
-        obj[key] = '\0'.repeat(obj[key].length);
-      }
-      delete obj[key];
-    });
-  }
-};
-```
-
-## Testing Encryption
-
-### Unit Tests for Encryption Functions
-
-```typescript
-// Test encryption/decryption round trip
-describe('Encryption Utils', () => {
-  const testKey = 'test-encryption-key';
-  const testData = 'sensitive-password-123';
-
-  test('encrypt and decrypt should return original data', () => {
-    const encrypted = encrypt(testData, testKey);
-    expect(encrypted).not.toBe(testData);
-    expect(encrypted).toBeTruthy();
-
-    const decrypted = decrypt(encrypted, testKey);
-    expect(decrypted).toBe(testData);
-  });
-
-  test('different keys should produce different encrypted data', () => {
-    const encrypted1 = encrypt(testData, testKey);
-    const encrypted2 = encrypt(testData, 'different-key');
-    expect(encrypted1).not.toBe(encrypted2);
-  });
-
-  test('wrong key should fail decryption gracefully', () => {
-    const encrypted = encrypt(testData, testKey);
-    const decrypted = decrypt(encrypted, 'wrong-key');
-    expect(decrypted).toBe(''); // Should return empty string
-  });
-});
-```
-
-### Integration Tests
-
-```typescript
-// Test full credential encryption flow
-describe('Credential Encryption', () => {
-  test('should encrypt and decrypt credentials correctly', async () => {
-    const userId = 1;
-    const email = 'test@example.com';
-    const encryptionKey = getUserEncryptionKey(userId, email);
-
-    const originalCredential = {
-      website: 'https://example.com',
-      title: 'Test Site',
-      username: 'testuser',
-      password: 'testpassword123',
-    };
-
-    const encrypted = encryptCredential(originalCredential, encryptionKey);
-    expect(encrypted.username).not.toBe(originalCredential.username);
-    expect(encrypted.password).not.toBe(originalCredential.password);
-
-    const decrypted = decryptCredential(encrypted, encryptionKey);
-    expect(decrypted.username).toBe(originalCredential.username);
-    expect(decrypted.password).toBe(originalCredential.password);
-  });
-});
-```
-
-## Environment Configuration
-
-### Required Environment Variables
-
-#### Backend Configuration
-```env
-# Encryption settings
-ENCRYPTION_SALT=a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456
-APP_SECRET_KEY=your-strong-app-secret-key-for-encryption-do-not-share
-
-# Database
-DATABASE_URL=file:./prod.db
-
-# JWT
-JWT_SECRET=your-jwt-secret-key-minimum-256-bits
-```
-
-#### Frontend Configuration
-```env
-# Must match backend APP_SECRET_KEY
-VITE_SECRET_KEY=your-strong-app-secret-key-for-encryption-do-not-share
-
-# Must match backend ENCRYPTION_SALT
-VITE_ENCRYPTION_SALT=a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456
-
-# API endpoint
-VITE_BACKEND_URL=https://yourdomain.com/api
-```
-
-### Security Warnings
-
-#### Critical Security Notes
-- **Never commit encryption keys to version control**
-- **Use different keys for development and production**
-- **Generate cryptographically random keys**
-- **Regularly rotate encryption keys**
-- **Monitor for key exposure in logs**
-
-#### Key Generation Examples
-```bash
-# Generate random salt (64 hex characters)
-openssl rand -hex 32
-
-# Generate random secret key
-openssl rand -base64 32
-
-# Generate JWT secret
-openssl rand -base64 64
-```
-
-## Compliance and Standards
-
-### Cryptographic Standards Compliance
-- **FIPS 140-2**: AES-256 approved algorithm
-- **NIST SP 800-132**: PBKDF2 key derivation guidelines
-- **RFC 3394**: Key wrapping (future enhancement)
-- **OWASP**: Cryptographic storage best practices
-
-### Data Protection Compliance
-- **GDPR**: Right to encryption and data protection
-- **CCPA**: Security requirements for personal information
-- **SOC 2**: Security controls for encryption
-- **ISO 27001**: Information security management
-
-For detailed information about specific encryption scenarios or troubleshooting, refer to the other documentation files or contact the development team.
+See [SECURITY.md](./SECURITY.md) for comprehensive security implementation.

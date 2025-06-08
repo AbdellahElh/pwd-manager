@@ -1,116 +1,499 @@
-# Web Browser Password Manager with Face Authentication
+# Face Password Manager - Backend
 
-This project is a browser-based password management application enhanced with facial recognition technology. Users can authenticate themselves by positioning their face in front of the webcam, after which they can securely store, retrieve, and manage passwords. The application leverages [face-api.js](https://github.com/justadudewhohacks/face-api.js) for face recognition and uses encryption for password storage.
+[![Express.js](https://img.shields.io/badge/Express.js-404D59?style=flat&logo=express)](https://expressjs.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Prisma](https://img.shields.io/badge/Prisma-3982CE?style=flat&logo=Prisma&logoColor=white)](https://www.prisma.io/)
+[![SQLite](https://img.shields.io/badge/SQLite-07405E?style=flat&logo=sqlite&logoColor=white)](https://www.sqlite.org/)
 
-## Table of Contents
+The Express.js backend API for the Password Manager with Facial Recognition application. This package provides secure REST API endpoints for user authentication, password management, and biometric data handling.
 
-- [Features](#features)
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Security Considerations](#security-considerations)
-- [Troubleshooting](#troubleshooting)
-- [Security Documentation](#security-documentation)
-- [Implementation Details](#implementation-details)
-- [Contributing](#contributing)
-- [License](#license)
+## 📋 Table of Contents
 
-## Features
+- [🚀 Features](#-features)
+- [🔧 Prerequisites](#-prerequisites)
+- [⚡ Quick Start](#-quick-start)
+- [🔧 Configuration](#-configuration)
+- [🗄️ Database Setup](#️-database-setup)
+- [🔐 API Endpoints](#-api-endpoints)
+- [🛡️ Security Implementation](#️-security-implementation)
+- [🚀 Development](#-development)
+- [📚 Documentation](#-documentation)
+- [🐛 Troubleshooting](#-troubleshooting)
+- [🤝 Contributing](#-contributing)
 
-- **Face Recognition Authentication:**  
-  Users are authenticated via their webcam. After the face models load and the user's face matches the stored descriptor, access is granted to the password manager. The system uses face-api.js for accurate face detection and matching.
-- **Secure Password Storage:**  
-  Passwords are encrypted before being stored using industry-standard encryption algorithms and can be safely retrieved only after successful authentication.
+## 🚀 Features
 
-- **User-Friendly Interface:**  
-  A simple, clean UI allows you to add, view, and manage stored passwords with ease.
+### 🔒 Security & Authentication
 
-- **Secure Architecture:**  
-  The application uses a modern client-server architecture with end-to-end encryption. Face descriptors and encrypted credentials are stored securely, with sensitive data never transmitted or stored as plaintext.
+- **JWT Authentication**: Secure token-based authentication system
+- **Facial Recognition**: Biometric authentication with face-api.js integration
+- **Password Encryption**: AES-256-GCM encryption with PBKDF2 key derivation
+- **Secure Face Storage**: Encrypted biometric templates with privacy protection
+- **Rate Limiting**: API rate limiting to prevent abuse
 
-## Prerequisites
+### 🛠️ Technical Features
 
-- **Node.js & npm:**  
-  Ensure that you have Node.js (LTS version recommended) and npm installed on your system.
+- **RESTful API**: Well-structured REST endpoints with proper HTTP methods
+- **Database ORM**: Prisma ORM with SQLite for efficient data management
+- **Type Safety**: Full TypeScript implementation with strict type checking
+- **Error Handling**: Comprehensive error handling with detailed logging
+- **CORS Support**: Configurable Cross-Origin Resource Sharing
+- **Middleware Stack**: Authentication, validation, and security middleware
 
-- **Modern Browser:**  
-  A recent version of Chrome, Firefox, or Edge is required for `getUserMedia` and webcam access.  
-  Note: HTTPS or `localhost` is often required for webcam permissions.
+### 📊 Data Management
 
-- **Webcam:**  
-  A working webcam is necessary for face recognition.
+- **User Management**: User registration, authentication, and profile management
+- **Credential Storage**: Secure password and credential management
+- **Face Descriptors**: Biometric template storage and matching
+- **Database Migrations**: Version-controlled database schema changes
+- **Data Validation**: Input validation using Zod schemas
 
-## Installation
+## 🔧 Prerequisites
 
-1. **Clone the Repositories:**
+- **Node.js**: Version 18.0 or higher
+- **npm**: Package manager (comes with Node.js)
+- **SQLite**: Database engine (automatically installed)
+- **Canvas Dependencies**: For face recognition processing
+
+### System Dependencies
+
+**Windows:**
+
+```bash
+# Install Visual Studio Build Tools
+npm install --global windows-build-tools
+
+# Install Canvas dependencies
+npm install canvas
+```
+
+**macOS:**
+
+```bash
+# Install Xcode Command Line Tools
+xcode-select --install
+
+# Install Canvas dependencies
+brew install pkg-config cairo pango libpng jpeg giflib librsvg
+```
+
+**Linux (Ubuntu/Debian):**
+
+```bash
+# Install Canvas dependencies
+sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
+```
+
+## ⚡ Quick Start
+
+### From Monorepo Root
+
+```bash
+# Install all dependencies
+npm run install:all
+
+# Start development servers (includes frontend)
+npm run dev
+
+# Backend API will be available at http://localhost:3000
+```
+
+### Package-Specific Development
+
+```bash
+# Navigate to backend package
+cd packages/face-pwd-manager-backend
+
+# Install dependencies
+npm install
+
+# Setup database
+npx prisma migrate dev
+npx prisma generate
+
+# Start development server
+npm run watch
+
+# Build for production
+npm run build
+```
+
+## 🔧 Configuration
+
+### Environment Variables
+
+Create a `.env` file in the package root:
+
+```env
+# Database Configuration
+DATABASE_URL="file:./prisma/dev.db"
+
+# Server Configuration
+PORT=3000
+NODE_ENV="development"
+
+# Authentication
+JWT_SECRET="your-super-secure-jwt-secret-key-here"
+JWT_EXPIRES_IN="7d"
+
+# Encryption Configuration
+APP_SECRET_KEY="your-app-secret-key-for-encryption-DO-NOT-SHARE"
+ENCRYPTION_SALT="your-32-character-hex-salt-string-here"
+
+# Security Settings
+ENFORCE_HTTPS="false"
+CORS_ORIGIN="http://localhost:5173"
+RATE_LIMIT_WINDOW="15"
+RATE_LIMIT_MAX="100"
+
+# Face Recognition
+FACE_RECOGNITION_THRESHOLD="0.6"
+FACE_DESCRIPTOR_DIMENSIONS="128"
+```
+
+### Production Environment
+
+```env
+# Production Settings
+NODE_ENV="production"
+PORT=3000
+ENFORCE_HTTPS="true"
+CORS_ORIGIN="https://your-frontend-domain.com"
+
+# Secure Database URL
+DATABASE_URL="file:./prisma/production.db"
+
+# Strong JWT Secret (generate with: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
+JWT_SECRET="your-production-jwt-secret-64-chars-minimum"
+
+# Secure App Secret (generate with: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
+APP_SECRET_KEY="your-production-app-secret-key-64-chars-minimum"
+
+# Secure Encryption Salt (generate with: node -e "console.log(require('crypto').randomBytes(16).toString('hex'))")
+ENCRYPTION_SALT="your-production-encryption-salt-32-chars"
+```
+
+## 🗄️ Database Setup
+
+### Initial Setup
+
+```bash
+# Generate Prisma client
+npx prisma generate
+
+# Run database migrations
+npx prisma migrate dev
+
+# (Optional) Seed database with test data
+npm run db:seed
+```
+
+### Database Management Commands
+
+| Command                    | Description                                |
+| -------------------------- | ------------------------------------------ |
+| `npx prisma studio`        | Open Prisma Studio for database inspection |
+| `npx prisma migrate dev`   | Create and apply new migration             |
+| `npx prisma migrate reset` | Reset database and apply all migrations    |
+| `npx prisma db push`       | Push schema changes without migrations     |
+| `npm run db:seed`          | Seed database with test data               |
+
+### Database Schema
+
+```prisma
+model User {
+  id               String        @id @default(cuid())
+  email            String        @unique
+  faceDescriptor   String        // Encrypted face template
+  encryptionSalt   String        // User-specific encryption salt
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  credentials      Credential[]
+}
+
+model Credential {
+  id          String   @id @default(cuid())
+  userId      String
+  website     String
+  username    String
+  password    String   // Encrypted password
+  notes       String?  // Encrypted notes
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+```
+
+## 🔐 API Endpoints
+
+### Authentication Routes (`/api/auth`)
+
+| Method | Endpoint    | Description                             | Authentication |
+| ------ | ----------- | --------------------------------------- | -------------- |
+| `POST` | `/register` | Register new user with face data        | None           |
+| `POST` | `/login`    | Authenticate user with face recognition | None           |
+| `POST` | `/refresh`  | Refresh JWT token                       | JWT Token      |
+| `POST` | `/logout`   | Logout and invalidate token             | JWT Token      |
+
+### User Routes (`/api/users`)
+
+| Method   | Endpoint   | Description                  | Authentication |
+| -------- | ---------- | ---------------------------- | -------------- |
+| `GET`    | `/profile` | Get user profile information | JWT Token      |
+| `PUT`    | `/profile` | Update user profile          | JWT Token      |
+| `DELETE` | `/account` | Delete user account          | JWT Token      |
+
+### Credential Routes (`/api/credentials`)
+
+| Method   | Endpoint | Description              | Authentication |
+| -------- | -------- | ------------------------ | -------------- |
+| `GET`    | `/`      | Get all user credentials | JWT Token      |
+| `POST`   | `/`      | Create new credential    | JWT Token      |
+| `GET`    | `/:id`   | Get specific credential  | JWT Token      |
+| `PUT`    | `/:id`   | Update credential        | JWT Token      |
+| `DELETE` | `/:id`   | Delete credential        | JWT Token      |
+
+### API Response Format
+
+```typescript
+// Success Response
+{
+  "success": true,
+  "data": any,
+  "message": string
+}
+
+// Error Response
+{
+  "success": false,
+  "error": {
+    "code": string,
+    "message": string,
+    "details": any
+  }
+}
+```
+
+## 🛡️ Security Implementation
+
+### Encryption Details
+
+- **Algorithm**: AES-256-GCM for symmetric encryption
+- **Key Derivation**: PBKDF2 with 100,000 iterations
+- **Salt Management**: Unique salts per user and operation
+- **IV Generation**: Cryptographically secure random IVs
+- **Authentication**: GCM mode provides built-in authentication
+
+### Face Recognition Security
+
+- **Template Protection**: Face descriptors encrypted before storage
+- **Threshold Validation**: Configurable similarity thresholds
+- **No Raw Storage**: Facial images never stored on server
+- **Privacy Preservation**: Biometric templates are one-way only
+
+### Network Security
+
+- **HTTPS Enforcement**: Configurable HTTPS-only mode
+- **CORS Protection**: Whitelisted origins only
+- **Rate Limiting**: Configurable request rate limits
+- **Security Headers**: Comprehensive security header implementation
+- **Input Validation**: Zod schema validation for all inputs
+
+For comprehensive security details, see [Security Documentation](../../docs/SECURITY.md).
+
+## 🚀 Development
+
+### Available Scripts
+
+| Command           | Description                                |
+| ----------------- | ------------------------------------------ |
+| `npm run dev`     | Start development server with ts-node      |
+| `npm run watch`   | Start development server with auto-restart |
+| `npm run build`   | Build TypeScript to JavaScript             |
+| `npm run start`   | Start production server                    |
+| `npm run lint`    | Run ESLint for code quality                |
+| `npm run format`  | Format code with Prettier                  |
+| `npm run migrate` | Run database migrations                    |
+| `npm run studio`  | Open Prisma Studio                         |
+
+### Development Workflow
+
+1. **API Development**:
 
    ```bash
-   # Clone backend repository
-   git clone https://github.com/AbdellahElh/pwd-manager-backend.git
-
-   # Clone frontend repository
-   git clone https://github.com/AbdellahElh/pwd-manager-frontend.git
+   npm run watch
+   # Server automatically restarts on file changes
+   # API available at http://localhost:3000/api
    ```
 
-2. **Install Dependencies:**
-
-   Backend:
+2. **Database Changes**:
 
    ```bash
-   cd pwd-manager-backend
-   npm install
+   # Modify schema.prisma
+   npx prisma migrate dev --name "your-migration-name"
+   # Generates migration and updates database
    ```
 
-   Frontend:
-
+3. **Testing API Endpoints**:
    ```bash
-   cd pwd-manager-frontend
-   npm install
+   # Use Postman, curl, or your preferred API client
+   # JWT tokens required for protected routes
    ```
 
-3. **Set up Environment Files:**
+### Project Structure
 
-   Create `.env` files for both repositories using the provided examples:
+```
+src/
+├── server.ts            # Main application entry point
+├── db.ts               # Database connection and configuration
+├── middleware/         # Express middleware functions
+│   ├── auth.ts        # JWT authentication middleware
+│   ├── errorHandler.ts # Global error handling
+│   ├── asyncHandler.ts # Async error wrapper
+│   └── httpsEnforcer.ts # HTTPS enforcement
+├── routes/            # API route definitions
+│   ├── UserRoutes.ts  # User management endpoints
+│   └── CredentialRoutes.ts # Password management endpoints
+├── services/          # Business logic and external services
+│   ├── AuthService.ts # Authentication logic
+│   ├── FaceService.ts # Face recognition processing
+│   └── EncryptionService.ts # Encryption/decryption
+├── models/           # Prisma model extensions
+├── schemas/          # Zod validation schemas
+├── utils/            # Utility functions and helpers
+└── generated/        # Prisma generated files
+```
 
-   Backend (create `.env` file based on `.env.example`):
+## 📚 Documentation
 
-   ```bash
-   # Copy example env file
-   cp .env.example .env
-   # Then edit the .env file with your settings
-   ```
+### Related Documentation
 
-   Frontend (create `.env` file based on `.env.example`):
+- [Main Project README](../../README.md) - Project overview and setup
+- [Frontend Documentation](../face-pwd-manager-frontend/README.md) - React application details
+- [Security Guide](../../docs/SECURITY.md) - Comprehensive security documentation
+- [Encryption Details](../../docs/ENCRYPTION.md) - Technical encryption implementation
+- [Face Recognition Security](../../docs/FACE_ENCRYPTION.md) - Biometric data protection
+- [HTTPS Setup](../../docs/HTTPS_SETUP.md) - SSL/TLS configuration
+- [Implementation Guide](../../docs/IMPLEMENTATION.md) - Technical implementation details
+- [Monorepo Workflow](../../docs/MONOREPO_WORKFLOW.md) - Development processes
 
-   ```bash
-   # Copy example env file
-   cp .env.example .env
-   # Then edit the .env file with your settings
-   ```
+### Technical References
 
-4. **Set up the Database:**
+- [Express.js Documentation](https://expressjs.com/) - Web framework
+- [Prisma Documentation](https://www.prisma.io/docs) - Database ORM
+- [face-api.js Documentation](https://github.com/justadudewhohacks/face-api.js) - Face recognition library
+- [SQLite Documentation](https://www.sqlite.org/docs.html) - Database engine
 
-   ```bash
-   cd pwd-manager-backend
-   npx prisma migrate dev
-   npx prisma generate
-   ```
+## 🐛 Troubleshooting
 
-5. **Start the Development Servers:**
+### Common Issues
 
-   Backend:
+**Database Connection Issues**
 
-   ```bash
-   cd pwd-manager-backend
-   npm run dev
-   ```
+```bash
+# Reset and recreate database
+npx prisma migrate reset --force
+npx prisma migrate dev
 
-   Frontend (in a separate terminal):
+# Regenerate Prisma client
+npx prisma generate
+```
 
-   ```bash
-   cd pwd-manager-frontend
-   npm run dev
-   ```
+**Canvas/Face Recognition Issues**
+
+```bash
+# Reinstall canvas with proper build tools
+npm uninstall canvas
+npm install canvas --build-from-source
+
+# On Windows, may need Visual Studio Build Tools
+npm install --global windows-build-tools
+```
+
+**Port Already in Use**
+
+```bash
+# Kill process using port 3000
+npx kill-port 3000
+
+# Or change port in .env file
+PORT=3001
+```
+
+**JWT Token Issues**
+
+```bash
+# Ensure JWT_SECRET is set and sufficiently long
+# Generate new secret: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+# Check token expiration settings
+JWT_EXPIRES_IN="7d"
+```
+
+### Performance Optimization
+
+1. **Database Optimization**:
+
+   - Use database indexes for frequently queried fields
+   - Implement pagination for large datasets
+   - Use connection pooling for high-traffic applications
+
+2. **Memory Management**:
+
+   - Face recognition models are cached in memory
+   - Implement garbage collection for long-running processes
+   - Monitor memory usage in production
+
+3. **API Performance**:
+   - Implement response caching where appropriate
+   - Use compression middleware for large responses
+   - Optimize database queries with Prisma
+
+### Monitoring and Logging
+
+```bash
+# View application logs
+npm run start | tee app.log
+
+# Monitor database connections
+npx prisma studio
+
+# Check API health
+curl http://localhost:3000/api/health
+```
+
+## 🤝 Contributing
+
+Please see the [main project README](../../README.md) for contribution guidelines.
+
+### Backend-Specific Guidelines
+
+1. Follow RESTful API design principles
+2. Use TypeScript for all new code
+3. Implement proper error handling with try-catch blocks
+4. Add input validation using Zod schemas
+5. Write comprehensive JSDoc comments
+6. Test API endpoints thoroughly
+7. Follow security best practices for authentication and data handling
+8. Update Prisma schema with proper migrations
+
+---
+
+**⚠️ Security Notice**: This backend handles sensitive biometric and credential data. Always use environment variables for secrets and enable HTTPS in production.
+
+**💡 Need Help?** Check the troubleshooting section above or refer to the comprehensive documentation in the `/docs` directory.
+
+```bash
+cd pwd-manager-backend
+npm run dev
+```
+
+Frontend (in a separate terminal):
+
+```bash
+cd pwd-manager-frontend
+npm run dev
+```
 
 ## Configuration
 
