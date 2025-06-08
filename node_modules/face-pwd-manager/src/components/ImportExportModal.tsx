@@ -35,6 +35,7 @@ const ImportExportModal: React.FC<ImportExportModalProps> = ({
       downloadFile(jsonData, `passwords-export-${timestamp}.json`, 'application/json');
       showSuccessToast('📥 Credentials exported to JSON successfully!');
     } catch (error) {
+      console.error('Export JSON error:', error);
       showErrorToast('Failed to export credentials to JSON');
     }
   };
@@ -46,6 +47,7 @@ const ImportExportModal: React.FC<ImportExportModalProps> = ({
       downloadFile(csvData, `passwords-export-${timestamp}.csv`, 'text/csv');
       showSuccessToast('📊 Credentials exported to CSV successfully!');
     } catch (error) {
+      console.error('Export JSON error:', error);
       showErrorToast('Failed to export credentials to CSV');
     }
   };
@@ -89,7 +91,7 @@ const ImportExportModal: React.FC<ImportExportModalProps> = ({
   };
 
   return (
-    <div className='p-6 max-w-md w-full'>
+    <div className='p-6 max-w-4xl w-full'>
       <h2 className='text-xl font-bold mb-6 text-center'>Import / Export Credentials</h2>
 
       {/* Tab Navigation */}
@@ -253,16 +255,6 @@ const ImportExportModal: React.FC<ImportExportModalProps> = ({
           )}
         </div>
       )}
-
-      {/* Actions */}
-      <div className='flex justify-end gap-2 mt-6 pt-4 border-t border-gray-700'>
-        <button
-          onClick={onClose}
-          className='px-4 py-2 bg-[#0a0a0a] text-white hover:text-gray-400 rounded-lg border border-transparent hover:border-gray-400 transition'
-        >
-          Close
-        </button>
-      </div>
     </div>
   );
 };

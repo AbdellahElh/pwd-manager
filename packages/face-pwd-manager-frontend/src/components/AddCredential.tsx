@@ -38,7 +38,7 @@ const AddCredential: React.FC<AddCredentialProps> = ({ onAddCredential }) => {
   };
 
   return (
-    <div className='flex flex-col gap-4'>
+    <div className='flex flex-col gap-4 p-6 max-w-md w-full'>
       <h3 className='text-xl font-bold mb-2 text-center'>Add New Credential</h3>
 
       <div className='space-y-4'>

@@ -42,7 +42,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
     <div className='fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-black/20'>
       <div
         ref={modalRef}
-        className='bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-md w-full p-6 mx-4 transform transition-all'
+        className='bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-lg w-full mx-4 transform transition-all'
       >
         {children}
       </div>

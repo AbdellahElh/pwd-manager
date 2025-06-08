@@ -90,7 +90,7 @@ const CredentialDetailModal: React.FC<CredentialDetailModalProps> = ({
   );
 
   return (
-    <div className='p-4 w-full max-w-md'>
+    <div className='p-6 w-full max-w-md'>
       <h2 className='text-xl font-bold mb-6'>{isEditing ? 'Edit' : 'View'} Credential</h2>
 
       {isEditing ? (
@@ -187,28 +187,33 @@ const CredentialDetailModal: React.FC<CredentialDetailModalProps> = ({
                 onChange={handleInputChange}
                 className='w-full p-2 pr-20 bg-[#181818] border border-gray-600 rounded-lg focus:outline-none focus:border-blue-600'
               />
-              {isEditing && <PasswordStrengthMeter password={formData.password} />}
-              <div className='absolute right-2 top-1/2 -translate-y-1/2 flex gap-2'>
-                {' '}
+              <div className='absolute right-2 top-1/2 -translate-y-1/2 flex gap-1'>
                 <button
                   type='button'
                   onClick={() => {
                     setShowPassword(!showPassword);
                     showSuccessToast(showPassword ? 'Password hidden' : 'Password visible');
                   }}
+                  className='p-1 hover:bg-gray-700 rounded transition-colors'
                   title={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? (
-                    <EyeOffIcon className='h-5 w-5 text-gray-400 hover:text-white' />
+                    <EyeOffIcon className='h-4 w-4 text-gray-400 hover:text-white' />
                   ) : (
-                    <EyeIcon className='h-5 w-5 text-gray-400 hover:text-white' />
+                    <EyeIcon className='h-4 w-4 text-gray-400 hover:text-white' />
                   )}
                 </button>
-                <button type='button' onClick={() => handleCopy(formData.password, 'Password')}>
-                  <ClipboardIcon className='h-5 w-5 text-gray-400 hover:text-white' />
+                <button
+                  type='button'
+                  onClick={() => handleCopy(formData.password, 'Password')}
+                  className='p-1 hover:bg-gray-700 rounded transition-colors'
+                  title='Copy password'
+                >
+                  <ClipboardIcon className='h-4 w-4 text-gray-400 hover:text-white' />
                 </button>
               </div>
             </div>
+            {isEditing && <PasswordStrengthMeter password={formData.password} />}
           </div>
 
           <div className='pt-4 flex justify-between'>
