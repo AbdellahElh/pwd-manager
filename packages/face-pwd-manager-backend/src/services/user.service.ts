@@ -11,7 +11,8 @@ import { decryptSelfieImage, decryptUserSelfieImage } from '../utils/imageDecryp
 import { ServiceError } from './ServiceError';
 
 // Assign the canvas implementations to faceapi
-// @ts-ignore
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-expect-error
 faceapi.env.monkeyPatch({ Canvas, Image });
 
 // TinyFaceDetector options (faster)
@@ -163,7 +164,10 @@ export async function authenticateWithFace(email: string, file?: Express.Multer.
     if (!process.env.JWT_SECRET) {
       throw ServiceError.validationFailed('JWT_SECRET environment variable is not defined');
     }
-    const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET);
+    const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, {
+      expiresIn: '24h',
+      algorithm: 'HS256',
+    });
     return {
       user: { id: user.id, email: user.email },
       token,

@@ -1,7 +1,9 @@
 // src/services/credentialService.ts
+import AES from 'crypto-js/aes';
+import UTF8 from 'crypto-js/enc-utf8';
 import { fetchAll, fetchById, post, put, remove } from '../data/apiClient';
 import { CredentialEntry } from '../models/Credential';
-import { decrypt, encrypt } from '../utils/cryptoUtils';
+import { strengthenKey } from '../utils/cryptoUtils';
 
 // Interface for encrypted credential
 
@@ -12,30 +14,56 @@ interface EncryptedCredential extends Omit<CredentialEntry, 'password' | 'userna
 
 /**
  * Process a single credential by encrypting sensitive fields
+ * Uses pre-computed strengthened key for better performance
  */
 const encryptCredential = (
   credential: CredentialEntry,
-  encryptionKey: string
+  strengthenedKey: string
 ): EncryptedCredential => {
   return {
     ...credential,
-    username: encrypt(credential.username, encryptionKey),
-    password: encrypt(credential.password, encryptionKey),
+    username: credential.username
+      ? AES.encrypt(credential.username, strengthenedKey).toString()
+      : '',
+    password: credential.password
+      ? AES.encrypt(credential.password, strengthenedKey).toString()
+      : '',
   };
 };
 
 /**
  * Process a single credential by decrypting sensitive fields
+ * Uses pre-computed strengthened key for better performance
  */
 const decryptCredential = (
   credential: EncryptedCredential,
-  encryptionKey: string
+  strengthenedKey: string
 ): CredentialEntry => {
   return {
     ...credential,
-    username: decrypt(credential.username, encryptionKey),
-    password: decrypt(credential.password, encryptionKey),
+    username: credential.username
+      ? AES.decrypt(credential.username, strengthenedKey).toString(UTF8)
+      : '',
+    password: credential.password
+      ? AES.decrypt(credential.password, strengthenedKey).toString(UTF8)
+      : '',
   };
+};
+
+/**
+ * Process multiple credentials by decrypting sensitive fields efficiently
+ * Pre-computes the strengthened key once for all credentials
+ */
+const decryptCredentials = (
+  credentials: EncryptedCredential[],
+  encryptionKey: string
+): CredentialEntry[] => {
+  // Pre-compute strengthened key once
+  const strengthenedKey = strengthenKey(encryptionKey);
+
+  const decryptedCredentials = credentials.map(cred => decryptCredential(cred, strengthenedKey));
+
+  return decryptedCredentials;
 };
 
 /**
@@ -50,7 +78,11 @@ export const fetchCredentials = async (
   }
 
   const credentials = await fetchAll(`/credentials/user/${userId}`);
-  return credentials.map((cred: EncryptedCredential) => decryptCredential(cred, encryptionKey));
+
+  // Use batch decryption for better performance
+  const decryptedCredentials = decryptCredentials(credentials, encryptionKey);
+
+  return decryptedCredentials;
 };
 
 /**
@@ -64,8 +96,9 @@ export const fetchCredentialById = async (
     throw new Error('Encryption key is required');
   }
 
-  const credential = await fetchById(`/credentials/${id}`);
-  return decryptCredential(credential, encryptionKey);
+  const credential: EncryptedCredential = await fetchById(`/credentials/${id}`);
+  const strengthenedKey = strengthenKey(encryptionKey);
+  return decryptCredential(credential, strengthenedKey);
 };
 
 /**
@@ -80,9 +113,12 @@ export const createCredential = async (
     throw new Error('Encryption key is required');
   }
 
+  // Pre-compute strengthened key once
+  const strengthenedKey = strengthenKey(encryptionKey);
+
   const encryptedCredential = encryptCredential(
     { ...credential, id: 0 } as CredentialEntry,
-    encryptionKey
+    strengthenedKey
   );
 
   const credentialWithUserId = {
@@ -95,7 +131,7 @@ export const createCredential = async (
     credentialWithUserId
   );
 
-  return decryptCredential(createdCredential, encryptionKey);
+  return decryptCredential(createdCredential, strengthenedKey);
 };
 
 /**
@@ -109,14 +145,17 @@ export const updateCredential = async (
     throw new Error('Encryption key is required');
   }
 
-  const encryptedCredential = encryptCredential(credential, encryptionKey);
+  // Pre-compute strengthened key once
+  const strengthenedKey = strengthenKey(encryptionKey);
+
+  const encryptedCredential = encryptCredential(credential, strengthenedKey);
 
   const updatedCredential = await put<EncryptedCredential, EncryptedCredential>(
     '/credentials',
     encryptedCredential
   );
 
-  return decryptCredential(updatedCredential, encryptionKey);
+  return decryptCredential(updatedCredential, strengthenedKey);
 };
 
 /**

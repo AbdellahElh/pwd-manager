@@ -2,7 +2,7 @@
 import React, { createContext, ReactNode, useContext, useMemo, useState } from 'react';
 import { post, setAuthToken } from '../data/apiClient';
 import { LoginResponse, User } from '../models/User';
-import { getUserEncryptionKey } from '../utils/cryptoUtils';
+import { clearKeyCache, getUserEncryptionKey } from '../utils/cryptoUtils';
 import { createEncryptedImageFormData } from '../utils/imageEncryptionUtils';
 
 interface AuthContextValue {
@@ -63,12 +63,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       email: response.user.email,
       token: response.token,
     };
+
     setAuthToken(response.token);
     localStorage.setItem('user', JSON.stringify(loggedInUser));
     setUser(loggedInUser);
   };
 
   const logout = () => {
+    // Clear the key cache for security
+    clearKeyCache();
+
     localStorage.removeItem('user');
     setAuthToken(null);
     setUser(null);

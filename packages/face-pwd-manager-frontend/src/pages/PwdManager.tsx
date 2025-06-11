@@ -27,14 +27,18 @@ const PasswordManager: React.FC = () => {
   }>({});
 
   // Custom fetcher function that uses our credential service
-  const credentialFetcher = async (_url: string) => {
+  const credentialFetcher = async () => {
     const id = Number(userId);
-    if (isNaN(id) || !encryptionKey) return [];
+    if (isNaN(id) || !encryptionKey) {
+      return [];
+    }
+
     return await fetchCredentials(id, encryptionKey);
   };
 
   // Only fetch once we have a valid userId
   const swrKey = userId != null ? `/credentials/user/${userId}` : null;
+
   const { data: credentials = [], error } = useSWR<CredentialEntry[]>(swrKey, credentialFetcher);
 
   const handleAddCredential = async (

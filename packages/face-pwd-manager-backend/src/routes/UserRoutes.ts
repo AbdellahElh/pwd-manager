@@ -2,12 +2,13 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { asyncHandler } from '../middleware/asyncHandler';
+import { authenticateJWT } from '../middleware/auth';
+import { authorizeOwnProfile, authorizeUser } from '../middleware/authorize';
 import { UserEmailSchema } from '../schemas/UserSchema';
 import { ServiceError } from '../services/ServiceError';
 import {
   authenticateWithFace,
   deleteUser,
-  getAllUsers,
   getUserById,
   registerUserWithImage,
 } from '../services/user.service';
@@ -15,21 +16,7 @@ import {
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-router.get(
-  '/',
-  asyncHandler(async (_req, res) => {
-    res.json(await getAllUsers());
-  })
-);
-
-// Get by id
-router.get(
-  '/:id',
-  asyncHandler(async (req, res) => {
-    res.json(await getUserById(+req.params.id));
-  })
-);
-
+// Public routes (no authentication required)
 // Register → email + selfie (supporting both encrypted and unencrypted images)
 router.post(
   '/register',
@@ -106,12 +93,45 @@ router.post(
   })
 );
 
-// Delete
+// Protected routes (authentication required)
+// Get current user's profile
+router.get(
+  '/profile',
+  authenticateJWT,
+  authorizeOwnProfile,
+  asyncHandler(async (req, res) => {
+    res.json(await getUserById(+req.params.id));
+  })
+);
+
+// Get user by id (only own data)
+router.get(
+  '/:id',
+  authenticateJWT,
+  authorizeUser,
+  asyncHandler(async (req, res) => {
+    res.json(await getUserById(+req.params.id));
+  })
+);
+
+// Delete user account (only own account)
 router.delete(
   '/:id',
+  authenticateJWT,
+  authorizeUser,
   asyncHandler(async (req, res) => {
     res.json(await deleteUser(+req.params.id));
   })
 );
+
+// Admin-only route (if needed) - currently removed for security
+// router.get(
+//   '/',
+//   authenticateJWT,
+//   // Add admin authorization middleware here if needed
+//   asyncHandler(async (_req, res) => {
+//     res.json(await getAllUsers());
+//   })
+// );
 
 export default router;

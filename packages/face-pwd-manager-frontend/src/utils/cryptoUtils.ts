@@ -9,16 +9,38 @@ const SALT = import.meta.env.VITE_ENCRYPTION_SALT;
 const ITERATIONS = 10000; // Number of iterations for key derivation
 const KEY_SIZE = 256; // 256-bit key
 
+// Cache for strengthened keys to avoid repeated PBKDF2 computations
+const keyCache = new Map<string, string>();
+
 /**
  * Strengthens a key using PBKDF2 key derivation function
+ * Uses caching to avoid repeated expensive computations for the same key
  * @param baseKey The initial key to strengthen
  * @returns A cryptographically stronger key
  */
 export const strengthenKey = (baseKey: string): string => {
-  return PBKDF2(baseKey, SALT, {
+  // Check cache first
+  if (keyCache.has(baseKey)) {
+    return keyCache.get(baseKey)!;
+  }
+
+  // Compute strengthened key using PBKDF2
+  const strengthenedKey = PBKDF2(baseKey, SALT, {
     keySize: KEY_SIZE / 32, // keySize in words (32 bits per word)
     iterations: ITERATIONS,
   }).toString();
+
+  // Cache the result
+  keyCache.set(baseKey, strengthenedKey);
+
+  return strengthenedKey;
+};
+
+/**
+ * Clears the key cache (useful for logout or security cleanup)
+ */
+export const clearKeyCache = (): void => {
+  keyCache.clear();
 };
 
 /**

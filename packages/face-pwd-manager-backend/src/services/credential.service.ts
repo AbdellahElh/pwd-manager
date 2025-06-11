@@ -4,11 +4,17 @@ import { handleDbError } from '../middleware/handleDbError';
 import { NewCredentialEntry } from '../models/Credential';
 import { ServiceError } from './ServiceError';
 
-async function credentialExists(id: number): Promise<void> {
+async function verifyCredentialOwnership(id: number, userId: number): Promise<void> {
   try {
-    const credential = await prisma.credential.findUnique({ where: { id } });
+    const credential = await prisma.credential.findUnique({
+      where: { id },
+      select: { id: true, userId: true },
+    });
     if (!credential) {
       throw ServiceError.notFound(`Credential with id ${id} not found`);
+    }
+    if (credential.userId !== userId) {
+      throw ServiceError.forbidden('Access denied. You can only access your own credentials.');
     }
   } catch (error) {
     throw handleDbError(error);
@@ -23,9 +29,9 @@ export async function getAllCredentials() {
   }
 }
 
-export async function getCredentialById(id: number) {
+export async function getCredentialById(id: number, userId: number) {
   try {
-    await credentialExists(id);
+    await verifyCredentialOwnership(id, userId);
     return await prisma.credential.findUnique({ where: { id } });
   } catch (error) {
     throw handleDbError(error);
@@ -42,12 +48,13 @@ export async function getCredentialsByUserId(userId: number) {
 
 export async function createCredential(data: NewCredentialEntry) {
   try {
-    const { website, title, username: _username, password: _password, userId } = data;
+    const { website, title, userId } = data;
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
       throw ServiceError.notFound(`User with id ${userId} does not exist`);
     }
+
     // Normalize website URL
     if (!website.startsWith('http') || website.startsWith('www')) {
       data.website = `https://${website}`;
@@ -61,17 +68,20 @@ export async function createCredential(data: NewCredentialEntry) {
   }
 }
 
-export async function updateCredential(id: number, data: Partial<NewCredentialEntry>) {
+export async function updateCredential(
+  id: number,
+  data: Partial<NewCredentialEntry>,
+  userId: number
+) {
   try {
-    await credentialExists(id);
+    await verifyCredentialOwnership(id, userId);
     const updateData: Record<string, any> = {};
-    if (data.userId !== undefined) {
-      const user = await prisma.user.findUnique({ where: { id: data.userId } });
-      if (!user) {
-        throw ServiceError.notFound(`User with id ${data.userId} not found`);
-      }
-      updateData.userId = data.userId;
+
+    // Don't allow changing the userId
+    if (data.userId !== undefined && data.userId !== userId) {
+      throw ServiceError.forbidden('Cannot change credential ownership');
     }
+
     if (data.website) {
       updateData.website =
         !data.website.startsWith('http') || data.website.startsWith('www')
@@ -99,9 +109,9 @@ export async function updateCredential(id: number, data: Partial<NewCredentialEn
   }
 }
 
-export async function deleteCredential(id: number) {
+export async function deleteCredential(id: number, userId: number) {
   try {
-    await credentialExists(id);
+    await verifyCredentialOwnership(id, userId);
     return await prisma.credential.delete({
       where: { id },
     });
