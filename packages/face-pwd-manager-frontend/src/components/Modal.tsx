@@ -4,10 +4,18 @@ interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   children: React.ReactNode;
+  size?: 'sm' | 'md' | 'lg';
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, size = 'lg' }) => {
   const modalRef = useRef<HTMLDivElement>(null);
+
+  // Define size classes
+  const sizeClasses = {
+    sm: 'max-w-sm',
+    md: 'max-w-md',
+    lg: 'max-w-lg',
+  };
 
   useEffect(() => {
     // Handle clicking outside modal to close
@@ -42,7 +50,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
     <div className='fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-black/20'>
       <div
         ref={modalRef}
-        className='bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-lg w-full mx-4 transform transition-all'
+        className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg ${sizeClasses[size]} w-full mx-4 transform transition-all`}
       >
         {children}
       </div>

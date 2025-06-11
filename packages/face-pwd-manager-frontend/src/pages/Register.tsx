@@ -1,4 +1,3 @@
-// src/components/Register.tsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Webcam from '../components/Webcam';
@@ -13,10 +12,29 @@ const Register: React.FC = () => {
   const [selfie, setSelfie] = useState<Blob | null>(null);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [captureError, setCaptureError] = useState('');
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const handleCapture = (blob: Blob) => setSelfie(blob);
+  const handleCapture = (blob: Blob) => {
+    // Check if email is provided before capturing
+    if (!email.trim()) {
+      setCaptureError('Please enter your email address before capturing a photo.');
+      return;
+    }
+
+    // Clear any previous capture error
+    setCaptureError('');
+    setSelfie(blob);
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+    // Clear capture error when user starts typing email
+    if (captureError) {
+      setCaptureError('');
+    }
+  };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selfie) {
@@ -41,9 +59,21 @@ const Register: React.FC = () => {
       // Login using the same selfie (also encrypted in the login function)
       await login(email, selfie);
       navigate('/');
-    } catch (err: any) {
+    } catch (err) {
       console.error('Register error:', err);
-      setError(err.response?.data?.message || err.message || 'Registration failed');
+
+      // Handle different error types from backend
+      if (err && typeof err === 'object' && 'response' in err) {
+        const apiError = err as { response?: { data?: { message?: string; error?: string } } };
+        const errorMessage = apiError.response?.data?.message || apiError.response?.data?.error;
+        if (errorMessage) {
+          setError(errorMessage);
+        } else {
+          setError('Registration failed. Please try again.');
+        }
+      } else {
+        setError('Registration failed. Please try again.');
+      }
       setIsLoading(false);
     }
   };
@@ -65,7 +95,7 @@ const Register: React.FC = () => {
             id='email'
             type='email'
             value={email}
-            onChange={e => setEmail(e.target.value)}
+            onChange={handleEmailChange}
             className='w-full p-2.5 border border-[var(--color-border-secondary)] rounded-lg focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all'
             placeholder='Enter your email'
             required
@@ -76,8 +106,8 @@ const Register: React.FC = () => {
             Face Recognition Photo
           </label>
           <p className='text-[var(--color-text-muted)] text-xs mb-2'>
-            Position your face within the camera view and click "Capture" to take a photo for
-            authentication.
+            Position your face within the camera view and click "Capture" or press Enter to take a
+            photo for authentication.
           </p>
           <div className='webcam-container -mx-6 -my-2'>
             <Webcam onCapture={handleCapture} />
@@ -85,6 +115,11 @@ const Register: React.FC = () => {
           <p className='text-[var(--color-text-muted)] text-xs mt-2'>
             This photo will be used to verify your identity when you login to your account.
           </p>
+          {captureError && (
+            <div className='mt-3 text-red-200 bg-red-900/50 p-2 rounded-lg text-sm text-center border border-red-800'>
+              {captureError}
+            </div>
+          )}
           {selfie && (
             <div className='mt-3 text-[var(--color-text-accent)] bg-[var(--color-bg-success)] p-2 rounded-lg text-sm text-center'>
               ✓ Photo captured successfully! You can now create your account.
