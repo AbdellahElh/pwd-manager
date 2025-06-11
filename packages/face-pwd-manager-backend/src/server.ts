@@ -38,10 +38,18 @@ app.use(express.json());
 app.use(express.static('public'));
 
 // Load face-api models before accepting requests for performance
-loadModelsOnce().catch(err => {
-  console.error('Failed to load face-api models:', err);
-  process.exit(1);
-});
+console.log('🔄 Preloading face-api models for optimal performance...');
+const modelLoadStart = Date.now();
+loadModelsOnce()
+  .then(() => {
+    const loadTime = Date.now() - modelLoadStart;
+    console.log(`✅ Face-api models loaded successfully in ${loadTime}ms`);
+    console.log('🚀 Server ready for face authentication requests');
+  })
+  .catch(err => {
+    console.error('❌ Failed to load face-api models:', err);
+    process.exit(1);
+  });
 
 app.use('/api/users', userRoutes);
 app.use('/api/credentials', credentialRoutes);

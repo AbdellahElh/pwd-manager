@@ -3,6 +3,7 @@ import React, { createContext, ReactNode, useContext, useMemo, useState } from '
 import { post, setAuthToken } from '../data/apiClient';
 import { LoginResponse, User } from '../models/User';
 import { clearKeyCache, getUserEncryptionKey } from '../utils/cryptoUtils';
+import { compressImage } from '../utils/imageCompressionUtils';
 import { createEncryptedImageFormData } from '../utils/imageEncryptionUtils';
 
 interface AuthContextValue {
@@ -45,12 +46,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     let formData: FormData;
 
     if (selfie) {
+      // Compress the image before processing for faster transmission
+      const compressedBlob = await compressImage(selfie, 0.7, 800); // Compress to 70% quality, max 800px
+
       // Create a temporary encryption key for login
       // We use a combination of email and app secret to derive this key
       const tempEncryptionKey = `pwd-manager-temp-${email}-${import.meta.env.VITE_SECRET_KEY}`;
 
-      // Create encrypted form data with the selfie
-      formData = await createEncryptedImageFormData(selfie, tempEncryptionKey, 'selfie', { email });
+      // Create encrypted form data with the compressed selfie
+      formData = await createEncryptedImageFormData(compressedBlob, tempEncryptionKey, 'selfie', {
+        email,
+      });
     } else {
       // If no selfie is provided, just send the email
       formData = new FormData();

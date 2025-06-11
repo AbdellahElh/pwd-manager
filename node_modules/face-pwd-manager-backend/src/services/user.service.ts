@@ -4,6 +4,7 @@ import * as faceapi from 'face-api.js';
 import jwt from 'jsonwebtoken';
 import path from 'path';
 
+import { getFaceDetectionConfig } from '../config/faceDetectionConfig';
 import prisma from '../db';
 import { handleDbError } from '../middleware/handleDbError';
 import { NewUserEntry } from '../models/User';
@@ -15,45 +16,77 @@ import { ServiceError } from './ServiceError';
 // @ts-expect-error
 faceapi.env.monkeyPatch({ Canvas, Image });
 
-// TinyFaceDetector options (faster)
-const detectorOptions = new faceapi.TinyFaceDetectorOptions({
-  inputSize: 160,
-  scoreThreshold: 0.5,
+// Get optimized face detection configuration
+const faceConfig = getFaceDetectionConfig();
+console.log('🔧 Face detection config:', {
+  inputSize: faceConfig.inputSize,
+  scoreThreshold: faceConfig.scoreThreshold,
+  maxImageDimension: faceConfig.maxImageDimension,
+  faceMatchThreshold: faceConfig.faceMatchThreshold,
 });
 
-async function downscaleBuffer(buffer: Buffer, maxDim = 600) {
+// Optimized TinyFaceDetector options for faster authentication
+const detectorOptions = new faceapi.TinyFaceDetectorOptions({
+  inputSize: faceConfig.inputSize,
+  scoreThreshold: faceConfig.scoreThreshold,
+});
+
+async function downscaleBuffer(buffer: Buffer, maxDim = faceConfig.maxImageDimension) {
   try {
     // Validate buffer before processing
     if (!buffer || buffer.length === 0) {
       throw new Error('Empty buffer provided to downscaleBuffer');
-    } // Attempt to determine image format by examining buffer headers
-    // Note: Image format detection for potential future use
-    // if (buffer[0] === 0xff && buffer[1] === 0xd8) -> jpeg
-    // if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47) -> png
+    }
 
     // Try to load the image
     const img = await loadImage(buffer);
 
+    // For face detection, we can be more aggressive with downscaling
     const ratio = Math.min(maxDim / img.width, maxDim / img.height, 1);
     const w = Math.round(img.width * ratio);
     const h = Math.round(img.height * ratio);
     const canvas = createCanvas(w, h);
-    canvas.getContext('2d')!.drawImage(img, 0, 0, w, h);
+
+    // Use faster drawing context settings
+    const ctx = canvas.getContext('2d')!;
+    ctx.imageSmoothingEnabled = false; // Disable antialiasing for speed
+    ctx.drawImage(img, 0, 0, w, h);
     return canvas;
-  } catch (error: any) {
-    throw new Error(`Failed to process image: ${error.message}`);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    throw new Error(`Failed to process image: ${errorMessage}`);
   }
 }
 
 let modelsLoaded = false;
+let modelsLoadingPromise: Promise<void> | null = null;
+
 export async function loadModelsOnce() {
   if (modelsLoaded) return;
-  const modelPath = path.join(__dirname, '../../public/models');
-  await faceapi.nets.tinyFaceDetector.loadFromDisk(modelPath);
-  await faceapi.nets.faceLandmark68Net.loadFromDisk(modelPath);
-  await faceapi.nets.faceRecognitionNet.loadFromDisk(modelPath);
-  modelsLoaded = true;
-  console.log('✅ Face API models loaded');
+
+  // Prevent multiple concurrent loading attempts
+  if (modelsLoadingPromise) {
+    return modelsLoadingPromise;
+  }
+
+  modelsLoadingPromise = (async () => {
+    const modelPath = path.join(__dirname, '../../public/models');
+    console.log('🔄 Loading Face API models...');
+    const startTime = Date.now();
+
+    // Load models in parallel for faster startup
+    await Promise.all([
+      faceapi.nets.tinyFaceDetector.loadFromDisk(modelPath),
+      faceapi.nets.faceLandmark68Net.loadFromDisk(modelPath),
+      faceapi.nets.faceRecognitionNet.loadFromDisk(modelPath),
+    ]);
+
+    modelsLoaded = true;
+    const loadTime = Date.now() - startTime;
+    console.log(`✅ Face API models loaded in ${loadTime}ms`);
+  })();
+
+  return modelsLoadingPromise;
 }
 
 async function userExists(id: number): Promise<void> {
@@ -74,7 +107,7 @@ export async function registerUserWithImage(data: NewUserEntry, file: Express.Mu
       try {
         // Decrypt the selfie image
         fileBuffer = decryptSelfieImage(fileBuffer, data.email);
-      } catch (decryptError) {
+      } catch {
         throw ServiceError.validationFailed('Failed to decrypt image data');
       }
     }
@@ -83,7 +116,7 @@ export async function registerUserWithImage(data: NewUserEntry, file: Express.Mu
     await loadModelsOnce();
     const canvas = await downscaleBuffer(fileBuffer);
     const faceDetection = await faceapi
-      .detectSingleFace(canvas as any, detectorOptions)
+      .detectSingleFace(canvas as unknown as HTMLCanvasElement, detectorOptions)
       .withFaceLandmarks()
       .withFaceDescriptor();
     if (!faceDetection) {
@@ -134,18 +167,19 @@ export async function authenticateWithFace(email: string, file?: Express.Multer.
         } else {
           fileBuffer = decryptSelfieImage(fileBuffer, email);
         }
-      } catch (decryptError) {
+      } catch {
         throw ServiceError.validationFailed('Failed to decrypt image data');
       }
     }
 
-    // Downscale selfie & detect
+    // Load models and process image (optimized for performance)
     await loadModelsOnce();
     const selfieCanvas = await downscaleBuffer(fileBuffer);
     const selfieDet = await faceapi
-      .detectSingleFace(selfieCanvas as any, detectorOptions)
+      .detectSingleFace(selfieCanvas as unknown as HTMLCanvasElement, detectorOptions)
       .withFaceLandmarks()
       .withFaceDescriptor();
+
     if (!selfieDet)
       throw ServiceError.validationFailed(
         'No face detected in the image. Please ensure your face is clearly visible and well-lit, then try again.'
@@ -155,7 +189,8 @@ export async function authenticateWithFace(email: string, file?: Express.Multer.
     const stored = user.faceDescriptor as number[];
     const storedDescriptor = new Float32Array(stored);
     const distance = faceapi.euclideanDistance(storedDescriptor, selfieDet.descriptor);
-    if (distance > 0.6) {
+
+    if (distance > faceConfig.faceMatchThreshold) {
       throw ServiceError.validationFailed(
         "Face verification failed. The face in the image doesn't match your registered face. Please try again or contact support if this continues."
       );
@@ -164,10 +199,12 @@ export async function authenticateWithFace(email: string, file?: Express.Multer.
     if (!process.env.JWT_SECRET) {
       throw ServiceError.validationFailed('JWT_SECRET environment variable is not defined');
     }
+
     const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, {
       expiresIn: '24h',
       algorithm: 'HS256',
     });
+
     return {
       user: { id: user.id, email: user.email },
       token,

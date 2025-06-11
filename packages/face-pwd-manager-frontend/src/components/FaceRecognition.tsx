@@ -49,19 +49,21 @@ const FaceRecognition: React.FC<FaceRecognitionProps> = ({
         return;
       }
 
-      // Create a canvas from the video feed
+      // Create a smaller canvas for faster processing
       const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
+      const targetWidth = 640; // Reduced from original video dimensions
+      const targetHeight = 480;
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
       const ctx = canvas.getContext('2d');
       if (!ctx) {
         throw new Error('Could not create canvas context');
       }
 
-      // Draw the video frame to the canvas
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      // Draw the video frame to the smaller canvas
+      ctx.drawImage(video, 0, 0, targetWidth, targetHeight);
 
-      // Convert canvas to blob
+      // Convert canvas to blob with reduced quality for faster upload
       const blob = await new Promise<Blob>((resolve, reject) => {
         canvas.toBlob(
           blob => {
@@ -69,7 +71,7 @@ const FaceRecognition: React.FC<FaceRecognitionProps> = ({
             else reject(new Error('Failed to create image blob'));
           },
           'image/jpeg',
-          0.95
+          0.8 // Reduced quality from 0.95 to 0.8 for faster processing
         );
       });
 
@@ -79,9 +81,23 @@ const FaceRecognition: React.FC<FaceRecognitionProps> = ({
       const stream = video.srcObject as MediaStream;
       stream.getTracks().forEach(t => t.stop());
       onAuthenticated();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Auth error:', err);
-      onError(err.response?.data?.message || err.message || 'Authentication failed');
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : err &&
+              typeof err === 'object' &&
+              'response' in err &&
+              err.response &&
+              typeof err.response === 'object' &&
+              'data' in err.response &&
+              err.response.data &&
+              typeof err.response.data === 'object' &&
+              'message' in err.response.data
+            ? String(err.response.data.message)
+            : 'Authentication failed';
+      onError(errorMessage);
       setAttemptingAuth(false);
     }
   }, [initialized, videoRef, email, login, onAuthenticated, onError, attemptingAuth]);
