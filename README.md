@@ -66,6 +66,37 @@ pwd-manager/
 └── README.md                         # This file
 ```
 
+## 🗄️ Database Schema
+
+The application uses a simple yet secure database schema designed for optimal performance and security:
+
+![Database Schema](./assets/database-schema.png)
+
+### Key Relationships
+
+- **User Model**: Stores user credentials and encrypted face descriptors
+
+  - `id` (PK): Auto-incrementing primary key
+  - `email` (unique): User identification and login
+  - `faceDescriptor`: Encrypted 128-dimensional face template
+  - `createdAt/updatedAt`: Audit timestamps
+
+- **Credential Model**: Stores encrypted user passwords and login information
+  - `id` (PK): Auto-incrementing primary key
+  - `website`: Target website/service URL
+  - `title`: Optional display name for the credential
+  - `username`: Encrypted username/email for the service
+  - `password`: Encrypted password using AES-256 + PBKDF2
+  - `userId` (FK): Links to the owning user
+  - `createdAt/updatedAt`: Audit timestamps
+
+### Security Design
+
+- **One-to-Many Relationship**: Each user can have multiple credentials
+- **Encrypted Storage**: All sensitive data (passwords, usernames, face descriptors) are encrypted before storage
+- **Zero-Knowledge**: Server cannot decrypt user data without user-specific keys
+- **Audit Trail**: All records include creation and modification timestamps
+
 ## ⚡ Quick Start
 
 ### Prerequisites
