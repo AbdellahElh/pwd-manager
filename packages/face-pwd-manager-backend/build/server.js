@@ -37,6 +37,18 @@ app.use(express_1.default.static('public'));
     console.error('Failed to load face-api models:', err);
     process.exit(1);
 });
+// Root endpoint for health check
+app.get('/', (_req, res) => {
+    res.json({
+        message: 'Face Password Manager API',
+        version: '1.0.0',
+        status: 'running',
+        endpoints: {
+            users: '/api/users',
+            credentials: '/api/credentials'
+        }
+    });
+});
 app.use('/api/users', UserRoutes_1.default);
 app.use('/api/credentials', CredentialRoutes_1.default);
 app.use(errorHandler_1.errorHandler);

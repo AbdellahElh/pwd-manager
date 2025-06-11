@@ -29,7 +29,7 @@ const Layout: React.FC = () => {
       <Outlet />
 
       {isLoggedIn && user && (
-        <Modal isOpen={isProfileModalOpen} onClose={toggleModal}>
+        <Modal isOpen={isProfileModalOpen} onClose={toggleModal} size='sm'>
           <UserProfile user={user} onLogout={logout} />
         </Modal>
       )}

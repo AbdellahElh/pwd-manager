@@ -43,6 +43,19 @@ loadModelsOnce().catch(err => {
   process.exit(1);
 });
 
+// Root endpoint for health check
+app.get('/', (_req, res) => {
+  res.json({
+    message: 'Face Password Manager API',
+    version: '1.0.0',
+    status: 'running',
+    endpoints: {
+      users: '/api/users',
+      credentials: '/api/credentials'
+    }
+  });
+});
+
 app.use('/api/users', userRoutes);
 app.use('/api/credentials', credentialRoutes);
 app.use(errorHandler);

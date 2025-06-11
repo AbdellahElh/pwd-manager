@@ -12,7 +12,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onLogout }) => {
   const initials = user.email.substring(0, 2).toUpperCase();
 
   return (
-    <div className='flex flex-col items-center space-y-4'>
+    <div className='p-6 flex flex-col items-center space-y-4'>
       <div className='w-24 h-24 rounded-full bg-blue-600 text-white flex items-center justify-center text-3xl font-bold'>
         {initials}
       </div>
@@ -24,7 +24,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onLogout }) => {
 
       <button
         onClick={onLogout}
-        className='w-full mt-4 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded transition-colors flex items-center justify-center gap-2'
+        className='mt-4 bg-red-600 hover:bg-red-700 text-white py-2 px-6 rounded-lg transition-colors flex items-center gap-2'
       >
         <LogoutIcon className='h-5 w-5' />
         Logout
