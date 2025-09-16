@@ -2,6 +2,13 @@
 node_modules/
 **/node_modules/
 
+# Package manager files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+.pnp
+.pnp.js
+
 # Environment variables
 .env
 .env.local
@@ -15,11 +22,16 @@ dist/
 dist-ssr/
 **/build/
 **/dist/
+*.tsbuildinfo
+**/*.tsbuildinfo
 
 # Database
 *.db
 *.db-journal
+*.sqlite
+*.sqlite3
 prisma/dev.db*
+prisma/migrations/dev.db*
 
 # Logs
 logs/
@@ -96,20 +108,30 @@ jspm_packages/
 tmp/
 temp/
 
-# Editor directories and files
+# OS generated files
+Thumbs.db
+ehthumbs.db
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+*~
+
+# IDE and editor files
 .vscode/*
 !.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
 .idea/
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
-
-# OS generated files
-Thumbs.db
-ehthumbs.db
+*~
 
 # Local development
 *.local
