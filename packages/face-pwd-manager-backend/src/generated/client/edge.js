@@ -35,12 +35,12 @@ exports.Prisma = Prisma
 exports.$Enums = {}
 
 /**
- * Prisma Client JS version: 6.7.0
- * Query Engine version: 3cff47a7f5d65c3ea74883f1d736e41d68ce91ed
+ * Prisma Client JS version: 6.16.2
+ * Query Engine version: 1c57fdcd7e44b29b9313256c76699e91c3ac3c43
  */
 Prisma.prismaVersion = {
-  client: "6.7.0",
-  engine: "3cff47a7f5d65c3ea74883f1d736e41d68ce91ed"
+  client: "6.16.2",
+  engine: "1c57fdcd7e44b29b9313256c76699e91c3ac3c43"
 }
 
 Prisma.PrismaClientKnownRequestError = PrismaClientKnownRequestError;
@@ -149,7 +149,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "D:\\abdey\\Documents\\3. Toegepaste info\\pwd-manager\\packages\\face-pwd-manager-backend\\src\\generated\\client",
+      "value": "/Users/abde/Documents/dev/pwd-manager/packages/face-pwd-manager-backend/src/generated/client",
       "fromEnvVar": null
     },
     "config": {
@@ -158,12 +158,16 @@ const config = {
     "binaryTargets": [
       {
         "fromEnvVar": null,
-        "value": "windows",
+        "value": "darwin-arm64",
         "native": true
+      },
+      {
+        "fromEnvVar": null,
+        "value": "darwin-arm64"
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "D:\\abdey\\Documents\\3. Toegepaste info\\pwd-manager\\packages\\face-pwd-manager-backend\\prisma\\schema.prisma",
+    "sourceFilePath": "/Users/abde/Documents/dev/pwd-manager/packages/face-pwd-manager-backend/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
@@ -171,8 +175,8 @@ const config = {
     "schemaEnvPath": "../../../.env"
   },
   "relativePath": "../../../prisma",
-  "clientVersion": "6.7.0",
-  "engineVersion": "3cff47a7f5d65c3ea74883f1d736e41d68ce91ed",
+  "clientVersion": "6.16.2",
+  "engineVersion": "1c57fdcd7e44b29b9313256c76699e91c3ac3c43",
   "datasourceNames": [
     "db"
   ],
@@ -186,8 +190,8 @@ const config = {
       }
     }
   },
-  "inlineSchema": "// prisma/schema.prisma\n\ndatasource db {\n  provider = \"sqlite\"\n  url      = env(\"DATABASE_URL\")\n}\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../src/generated/client\"\n}\n\nmodel User {\n  id             Int          @id @default(autoincrement())\n  email          String       @unique\n  faceDescriptor Json // 128-dim face descriptor stored as JSON\n  createdAt      DateTime     @default(now())\n  updatedAt      DateTime     @updatedAt\n  credentials    Credential[]\n}\n\nmodel Credential {\n  id        Int      @id @default(autoincrement())\n  website   String // e.g. \"www.instagram.com\"\n  title     String? // e.g. \"Instagram\" or \"www.instagram.com\"\n  username  String // e.g. \"user@gmail.com\"\n  password  String // stored securely (encrypt if needed)\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  // Foreign key: each credential belongs to a user.\n  userId Int\n  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)\n}\n",
-  "inlineSchemaHash": "5a4b0cd52b07c2d81eba4515cebb1e0d8570758fa775aa5dc12362b93de56c98",
+  "inlineSchema": "// prisma/schema.prisma\n\ndatasource db {\n  provider = \"sqlite\"\n  url      = env(\"DATABASE_URL\")\n}\n\ngenerator client {\n  provider      = \"prisma-client-js\"\n  output        = \"../src/generated/client\"\n  binaryTargets = [\"native\", \"darwin-arm64\"]\n}\n\nmodel User {\n  id             Int          @id @default(autoincrement())\n  email          String       @unique\n  faceDescriptor Json // 128-dim face descriptor stored as JSON\n  createdAt      DateTime     @default(now())\n  updatedAt      DateTime     @updatedAt\n  credentials    Credential[]\n}\n\nmodel Credential {\n  id        Int      @id @default(autoincrement())\n  website   String // e.g. \"www.instagram.com\"\n  title     String? // e.g. \"Instagram\" or \"www.instagram.com\"\n  username  String // e.g. \"user@gmail.com\"\n  password  String // stored securely (encrypt if needed)\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  // Foreign key: each credential belongs to a user.\n  userId Int\n  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)\n}\n",
+  "inlineSchemaHash": "f07e98c98133454b390ac111dff094caf13abfe6a3579fa5193e2f4bef5f4f46",
   "copyEngine": true
 }
 config.dirname = '/'
